@@ -42,6 +42,7 @@ df_Tim<-df_Tim %>% mutate(condi=paste(df_Tim$site,df_Tim$plotID,sep=" "))
 see how much data I have per species
 
 
+
 ```{r}
 df_Tim<-df_Tim%>%
   filter(!is.na(weight.inf))
