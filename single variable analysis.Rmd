@@ -36,6 +36,13 @@ library(lmerTest)
 
 
 ```
+```{r}
+df_Tim<-read.csv('D:/mes_documents/M1/stage/data/csv/rangeX seeds even number (2).xlsx - Feuille 1.csv',dec=",", na.strings = c("#DIV/0!"))
+
+df_Tim<-as.data.frame(df_Tim)
+df_Tim<- df_Tim %>% mutate(student='Timothée')
+
+```
 
 
 ```{r}
@@ -254,34 +261,34 @@ plot_final
 #releveling temperature: reference = ambient HS
 all_trait_pca$temp<-relevel(as.factor(all_trait_pca$temperature),"ambient HS")
 
-glmm_vegh1<- lmer(height_veg_cm~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_reph1<- lmer(height_rep_cm~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 #gllm_test<-glmer.nb(height_veg_cm~condi + (1|blockID)+ (1|species), data=all_trait_pca)
 
-glmm_vegh2<- lmer(height_veg_cm~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_reph2<- lmer(height_rep_cm~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_vegh3<- lmer(height_veg_cm~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
-
-
-glmm_vegh4<- lmer(height_veg_cm~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_reph3<- lmer(height_rep_cm~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
-sjPlot::tab_model(glmm_vegh1,show.intercept = T)
-sjPlot::plot_model(glmm_vegh1, show.values = TRUE, width = 0.1, title = "effect of treatment on vegetativ height")
+glmm_reph4<- lmer(height_rep_cm~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
-sjPlot::tab_model(glmm_vegh2,show.intercept = T)
-sjPlot::plot_model(glmm_vegh2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seeds number per infructescence") 
+sjPlot::tab_model(glmm_reph1,show.intercept = T)
+sjPlot::plot_model(glmm_reph1, show.values = TRUE, width = 0.1, title = "effect of treatment on reproductive height")
 
-sjPlot::tab_model(glmm_vegh3,show.intercept = T)
-sjPlot::plot_model(glmm_vegh3, show.values = TRUE, width = 0.1, title = "effect of warming on seeds number per infructescence") 
 
-sjPlot::tab_model(glmm_vegh4,show.intercept = T)
-sjPlot::plot_model(glmm_vegh4, show.values = TRUE, width = 0.1, title = "effect of competition on seeds number per infructescence") 
+sjPlot::tab_model(glmm_reph2,show.intercept = T)
+sjPlot::plot_model(glmm_reph2, show.values = TRUE, width = 0.1, title = "effect of transplantation on reproductive height per infructescence") 
+
+sjPlot::tab_model(glmm_reph3,show.intercept = T)
+sjPlot::plot_model(glmm_reph3, show.values = TRUE, width = 0.1, title = "effect of warming on reproductive height per infructescence") 
+
+sjPlot::tab_model(glmm_reph4,show.intercept = T)
+sjPlot::plot_model(glmm_reph4, show.values = TRUE, width = 0.1, title = "effect of competition on reproductive height per infructescence") 
 ```
 
 ### post hoc analysis
 ```{r}
-summary(glht(glmm_vegh1, mcp(condi="Tukey")))
+summary(glht(glmm_reph1, mcp(condi="Tukey")))
 
 ```
 
@@ -289,12 +296,12 @@ summary(glht(glmm_vegh1, mcp(condi="Tukey")))
 
 ### check performance : that ' s ok for everything I think
 ```{r}
-check_glmm_test<-check_model(glmm_vegh1)
+check_glmm_test<-check_model(glmm_reph1)
 plot(check_glmm_test)
 ```
 
 ```{r}
-a<-fixef(glmm_vegh1)
+a<-fixef(glmm_reph1)
 b<-as.data.frame(a)
 rname<- gsub("condi", "", row.names(b)[-1])
 b<-append(b[,][-1],0)
@@ -319,4 +326,84 @@ plot_final
 
 ```
 
+
+# glmm on leaves number
+```{r}
+
+#releveling temperature: reference = ambient HS
+all_trait_pca$temp<-relevel(as.factor(all_trait_pca$temperature),"ambient HS")
+
+glmm_nol1<- glmer.nb(no_leaves~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
+#gllm_test<-glmer.nb(height_veg_cm~condi + (1|blockID)+ (1|species), data=all_trait_pca)
+
+glmm_nol2<- glmer.nb(no_leaves~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_nol3<- glmer.nb(no_leaves~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+glmm_nol4<- glmer.nb(no_leaves~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_nol1,show.intercept = T)
+sjPlot::plot_model(glmm_nol1, show.values = TRUE, width = 0.1, title = "effect of treatment on leaves number")
+
+
+sjPlot::tab_model(glmm_nol2,show.intercept = T)
+sjPlot::plot_model(glmm_nol2, show.values = TRUE, width = 0.1, title = "effect of transplantation on leaves number per infructescence") 
+
+sjPlot::tab_model(glmm_nol3,show.intercept = T)
+sjPlot::plot_model(glmm_nol3, show.values = TRUE, width = 0.1, title = "effect of warming on leaves number per infructescence") 
+
+sjPlot::tab_model(glmm_nol4,show.intercept = T)
+sjPlot::plot_model(glmm_nol4, show.values = TRUE, width = 0.1, title = "effect of competition on leaves number per infructescence") 
+```
+
+### post hoc analysis
+```{r}
+summary(glht(glmm_nol1, mcp(condi="Tukey")))
+
+```
+
+
+
+```{r}
+check_glmm_test<-check_model(glmm_nol1)
+plot(check_glmm_test)
+```
+```{r}
+check_overdispersion(glmm_nol1)
+
+```
+results with a poisson family:
+
+ dispersion ratio =    37.501
+  Pearson's Chi-Squared = 13012.737
+                p-value =   < 0.001
+=> overdispersed : use a neg bin.
+
+```{r}
+a<-fixef(glmm_nol1)
+b<-as.data.frame(a)
+rname<- gsub("condi", "", row.names(b)[-1])
+b<-append(b[,][-1],0)
+rname<-append(rname,"HS A")
+
+#confidence interval
+CI<-coef(summary(glmm_nol1))
+CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
+CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
+
+df_plot<-data.frame(condi=rname,value=b)
+df_plot<-df_plot %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CI)
+
+
+
+plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Warming, transplantation and competition influence seed number per infructescence")
+plot_final
+
+```
 
