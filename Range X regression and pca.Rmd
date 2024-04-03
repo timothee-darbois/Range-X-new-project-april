@@ -50,6 +50,7 @@ df_Ingrid<- df_Ingrid %>% mutate(student='Ingrid')
 
 
 ```
+  
 
 ```{r}
 df1<-df_Tim%>% dplyr::select(1,2,3,4,5,6,7,8,9,10,11,12,13,"student")

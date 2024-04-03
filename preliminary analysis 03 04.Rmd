@@ -26,6 +26,7 @@ library (multcomp)
 library(see)
 library(performance)
 library(broom.mixed)
+library(ggeffects)
 
 ```
 
@@ -489,10 +490,6 @@ summary(glht(glmm_sn1, mcp(condi="Tukey")))
 
 
 ### check performance
-```{r}
-check_glmm_test<-check_model(gllm_test)
-plot(check_glmm_test)
-```
 
 ```{r}
 check_glmm_sn1<-check_model(glmm_sn1)
@@ -504,7 +501,6 @@ plot(check_glmm_sn1)
 check_overdispersion(glmm_sn1)
 
 ```
-seems not so bad in term of overdispersion ?
 final graph
 ```{r}
 a<-fixef(glmm_sn1)
@@ -556,8 +552,8 @@ plot_model(glmm_sn_tc, show.values = TRUE, width = 0.1, title = "interactions of
 anova type 2, 3?
 
 ```{r}
-Anova(glmm_sn_tc_2)
-Anova(glmm_sn_tc_2, type = 3)
+Anova(glmm_sn_tc)
+Anova(glmm_sn_tc, type = 3)
 ```
 
 #### transplantation*competition
@@ -668,19 +664,19 @@ plot_model(glmm_sn4_LM, show.values = TRUE, width = 0.1, title = "effect of comp
 ```
 
 ```{r}
-summary(glht(glmm_sn_LM, mcp(condi="Tukey")))
+summary(glht(glmm_sn1_LM, mcp(condi="Tukey")))
 
 ```
 
 ```{r}
-a<-fixef(glmm_sn_LM)
+a<-fixef(glmm_sn1_LM)
 b<-as.data.frame(a)
 rname<- gsub("condi", "", row.names(b)[-1])
 b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_sn_LM))
+CI<-coef(summary(glmm_sn1_LM))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
