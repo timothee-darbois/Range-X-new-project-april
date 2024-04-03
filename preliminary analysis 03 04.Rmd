@@ -1,0 +1,950 @@
+---
+title: "rangeX"
+author: "Timothée Darbois"
+date: "2024-03-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ade4)
+library(ggplot2)
+library(tidyverse)
+library(googlesheets4)
+library(dplyr)
+library(rstatix)
+library(readxl)
+library(sjPlot)
+library(contrast)
+library(lme4)
+library(lmerTest)
+library (multcomp)
+library(see)
+library(performance)
+library(broom.mixed)
+
+```
+
+```{r}
+df_Tim<-read.csv('D:/mes_documents/M1/stage/data/csv/rangeX seeds even number (2).xlsx - Feuille 1.csv',dec=",", na.strings = c("#DIV/0!"))
+
+df_Tim<-as.data.frame(df_Tim)
+df_Tim<- df_Tim %>% mutate(student='Timothée')
+
+df_Tim<-df_Tim %>% mutate(condi=paste(df_Tim$site,df_Tim$plotID,sep=" "))
+
+```
+
+see how much data I have per species
+
+
+```{r}
+df_Tim<-df_Tim%>%
+  filter(!is.na(weight.inf))
+species=c("CC","CN","SP","TP","PS","PL","LM","SD","HM","LV")
+select_species=c("CN","SP","TP","PS","PL","LM","LV") # with enough counts
+
+#df_TP<-df1[df1$species=="TP",]
+counts<-c()
+for (i in species){
+  print(i)
+  counts<-c(counts,nrow(df_Tim[df_Tim$species==i,]))
+
+}
+count_data<-data.frame(species,counts)
+
+
+
+ggplot(data=count_data,aes(x=species,y=counts)) +geom_bar(stat="identity") + ggtitle("timothee data")
+```
+simple boxplot: effect of treatments on seeds
+
+
+## import of ingrid's data
+```{r}
+df_Ingrid<-read.csv('D:/mes_documents/M1/stage/data/csv/Copie de Seeds rangeX Timothée - Seeds odd numbers.csv', dec=",", na.strings = c("#DIV/0!"))
+df_Ingrid<-as.data.frame(df_Ingrid)
+df_Ingrid<- df_Ingrid %>% mutate(student='Ingrid')
+
+
+```
+
+data cleaning and raw data visualization
+```{r}
+
+df_Ingrid<-df_Ingrid%>%
+  filter(!is.na(weight.inf))
+counts<-c()
+for (i in species){
+  print(i)
+  counts<-c(counts,nrow(df_Ingrid[df_Ingrid$species==i,]))
+
+}
+count_data<-data.frame(species,counts)
+
+
+
+ggplot(data=count_data,aes(x=species,y=counts)) +geom_bar(stat="identity") +ggtitle('data_ingrid')
+
+```
+
+```{r}
+df1<-df_Tim%>% dplyr::select(1,2,3,4,5,6,7,8,9,10,11,12,13,"flowers","seeds_number_1", "weight_1","seeds_number_2", "weight_2","seeds._number_3", "weight_3","student")
+df2<-df_Ingrid%>% dplyr::select(1,2,3,4,5,6,7,8,9,10,11,12,13,"flowers","seeds_number_1", "weight_1","seeds_number_2", "weight_2","seeds._number_3", "weight_3","student")
+df<-rbind(df1,df2)
+
+df<-df %>% mutate(seeds_number.inf=as.integer(seeds_number.inf),       seeds_number_1=as.integer(seeds_number_1),seeds_number_2=as.integer(seeds_number_2),seeds._number_3=as.integer(seeds._number_3),weight.inf=as.numeric(weight.inf),weight.seed=as.numeric(weight.seed),flowers=as.numeric(flowers))
+df<-df%>%
+  filter(!is.na(weight.inf))
+
+df<-df %>% mutate(condi=paste(df$site,df$plotID,sep=" "))
+
+```
+get the index of the column of seed number per infructescence, and add to df the column of total seed number/indiv (na.rm pour ignorer les na)
+```{r}
+column=c(grep("^seeds_number_1$", colnames(df)),grep("^seeds_number_2$", colnames(df)),grep("^seeds._number_3$", colnames(df)))
+
+df<- df %>%
+    rowwise() %>%
+    mutate(seeds_number.indiv = sum(c_across(c("seeds_number_1","seeds_number_2","seeds._number_3")),na.rm=TRUE))
+```
+
+rowSums(dataframe[ , c(« column1 », « column2 », « column n »)])
+
+construction de colonne weight.inf et weight.seed avec ajout d'une petite constante, pour pouvoir loger le tout
+```{r}
+c<-which(df$weight.inf!= 0)
+c1<-min(df$weight.inf[c])/2
+
+c<-which(df$weight.seed!= 0)
+c2<-min(df$weight.seed[c])/2
+
+c(c1,c2)
+df<-data.frame(df,weight.inf.log=df$weight.inf+c1,weight.seed.log=df$weight.seed+c2)
+```
+
+construction d'une colone temperature avec warm high, ambient low, ambient high
+```{r}
+df<-data.frame(df,temperature=paste(df$treat1,df$site))
+df$temperature<-str_replace(df$temperature,"LS","ambient LS")
+```
+
+for each species, seed number
+
+
+
+```{r}
+plot_snb<- ggplot(df, aes(x=condi, y=seeds_number.inf))+geom_violin(aes(fill=student))+
+  geom_dotplot(binaxis = 'y',
+        dotsize = 0.3,
+        stackdir = 'center') +
+    theme_classic() +
+    geom_jitter(aes(colour = student), alpha=0.9, 
+              position=position_jitter(w=0.1,h=0.1)) +
+  facet_wrap(vars(species),nrow=2, scales='free')+
+  ggtitle("seed number per infructescence")
+
+plot_snb
+```
+
+for each species, seed weight
+```{r}
+
+plot_sw<- ggplot(df, aes(x=condi, y=weight.inf))+
+  geom_boxplot(aes(fill=student)) +
+  geom_dotplot(binaxis = 'y',
+        dotsize = 1,
+        stackdir = 'center') +
+    theme_classic() + facet_wrap(vars(species),nrow=2,scales='free')+ggtitle("seed weight per infructescence")
+  
+
+plot_sw
+```
+
+for each species, weight per seeds
+```{r}
+plot_wps<- ggplot(df, aes(x=condi, y=log(weight.seed)))+geom_boxplot(aes(fill=student)) + geom_dotplot(binaxis = 'y',
+        dotsize = 1,
+        stackdir = 'center') +
+    theme_classic() + facet_wrap(vars(species),nrow=2,scales='free')+ggtitle("seed weight per seed")
+  
+
+plot_wps
+```
+
+# analyse stat
+## effet expérimentateur
+```{r}
+df_TP<-df[df$species=="TP",]
+df_TP<-df_TP %>%
+  filter(!is.na(weight.inf))
+
+
+```
+
+## qqplot seed weight
+```{r}
+plot_sw<- ggplot(df, aes(x= weight.inf))+geom_histogram(aes(fill=student))+
+    theme_classic() + facet_wrap(vars(species),nrow=2,scales='free')+ggtitle("seed weight per infructescence")
+plot_sw
+  
+```
+
+## qqplot weight per infructescence
+```{r}
+hist_wpi<- ggplot(df, aes(x=weight.inf))+
+  geom_histogram(aes(fill=student))+
+    theme_classic() + 
+  facet_wrap(vars(species),nrow=2,scales='free')+
+  ggtitle("seed weight per infructescence")
+hist_wpi
+```
+
+
+inutile:
+shapiro.test(df$weight.seed)
+shapiro.test(log(df$weight.seed+1))
+
+shapiro.test(df$seeds_number.inf)
+
+shapiro.test(log(df[df$species=="TP",]$weight.inf+1))
+shapiro.test(df[df$species=="TP",]$weight.inf)
+
+
+at least, some are not normal (eg : there are bimodal distribution with viable and not viable seeds)
+#U test  effect of the experimentator
+```{r}
+U_sn<-c()
+U_wpi<-c()
+U_wps<-c()
+
+for (i in 1:7){
+  data_U<-df[df$species==select_species[i],]
+  
+  U_sn<-rbind(U_sn,wilcox.test(seeds_number.inf~student,data_U))
+
+  U_wpi<-rbind(U_wpi,wilcox.test(weight.inf~student,data_U))
+
+  U_wps<-rbind(U_wps,wilcox.test(weight.seed~student,data_U))
+}
+
+U_sn<-cbind(U_sn, select_species)
+U_wpi<-cbind(U_wpi, select_species)
+U_wps<-cbind(U_wps, select_species)
+
+print("seeds number")
+U_sn
+print("weight.inf")
+U_wpi
+print("weight per seed")
+U_wps
+```
+## pool all the species together, as part of a community.
+
+```{r}
+plot_t_sn<- ggplot(df, aes(x=condi, y=seeds_number.inf ))+geom_boxplot(aes(fill=student)) + geom_dotplot(binaxis = 'y',
+        dotsize = 0.01,
+        stackdir = 'center') +theme_classic() 
+    
+plot_t_sn
+anova_test(df,seeds_number.inf~condi)
+anova_test(df,seeds_number.inf~student)
+
+```
+
+```{r}
+plot_t_sw<- ggplot(df, aes(x=condi, y=log(weight.inf) ))+geom_boxplot(aes(fill=student)) + geom_dotplot(binaxis = 'y',
+        dotsize = 0.01,
+        stackdir = 'center') +theme_classic() 
+    
+plot_t_sw
+anova_test(df,weight.inf~condi)
+anova_test(df,weight.inf~student)
+
+```
+
+```{r}
+plot_t_wpi<- ggplot(df, aes(x=condi, y=log(weight.seed) ))+geom_boxplot(aes(fill=student)) + geom_dotplot(binaxis = 'y',
+        dotsize = 0.01,
+        stackdir = 'center') +theme_classic() 
+    
+plot_t_wpi
+anova_test(df,weight.seed~condi)
+anova_test(df,weight.inf~student)
+
+
+
+```
+
+
+
+anova 2 way test for student and conditions effect. there is no interactions between both.
+```{r}
+var=c(8,9,10)
+
+anov_sn<-c()
+anov_wpi<-c()
+anov_wps<-c()
+
+for (i in 1:7){
+  test_anov<-df[df$species==select_species[i],]
+  
+  anov_sn<-rbind(anov_sn,anova_test(test_anov,seeds_number.inf~student*condi))
+
+  anov_wpi<-rbind(anov_wpi,anova_test(test_anov,weight.inf~student*condi))
+
+  anov_wps<-rbind(anov_wps,anova_test(test_anov,weight.seed~student*condi))
+}
+
+species_anov<-c()
+for (i in 1:7){species_anov<-c(species_anov,rep(select_species[i],3))}
+anov_sn<-data.frame(anov_sn,species=species_anov)
+anov_wpi<-data.frame(anov_wpi,species=species_anov)
+anov_wps<-data.frame(anov_wps,species=species_anov)
+print(anov_sn)
+print(anov_wpi)
+print(anov_wps)
+
+```
+## lm
+
+
+lm_allsp_sn <- lm(seeds_number.inf~condi, data=df,family= "poisson")
+lm_allsp_sn
+lm_allsp_sn2 <- lm(seeds_number.inf~site, data=df,family= "poisson")
+
+
+sjPlot::tab_model(lm_allsp_sn,show.intercept = T)
+plot_model(lm_allsp_sn, show.values = TRUE, width = 0.1, title = "effect of treatments on seeds number per infructescence") 
+
+qqnorm(lm_allsp_sn$residuals,main="normal residuals qqplot seed number per inf")
+qqline(lm_allsp_sn$residuals)
+qqnorm(log(lm_allsp_sn$residuals),main="log(residuals) qqplot seed number per inf")
+qqline(log(lm_allsp_sn$residuals))
+
+## glm
+### seed number
+
+
+
+#glm_allsp_sn <- glm(seeds_number.inf+0.0001~condi,data=df,family=Gamma(link=inverse))
+glm_allsp_sn <- glm(seeds_number.inf~condi,data=df,family="poisson")
+glm_allsp_sn
+glm_allsp_sn2 <- glm(seeds_number.inf~site, data=df,family= "poisson")
+glm_allsp_sn3 <- glm(seeds_number.inf~temperature, data=df,family= "poisson")
+glm_allsp_sn4 <- glm(seeds_number.inf~treat2, data=df,family= "poisson")
+
+
+sjPlot::tab_model(glm_allsp_sn,show.intercept = T)
+plot_model(glm_allsp_sn, show.values = TRUE, width = 0.1, title = "effect of treatments on seeds number per infructescence") 
+
+sjPlot::tab_model(glm_allsp_sn2,show.intercept = T)
+plot_model(glm_allsp_sn2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seeds number per infructescence") 
+
+sjPlot::tab_model(glm_allsp_sn3,show.intercept = T)
+plot_model(glm_allsp_sn3, show.values = TRUE, width = 0.1, title = "effect of warming on seeds number per infructescence") 
+
+sjPlot::tab_model(glm_allsp_sn3,show.intercept = T)
+plot_model(glm_allsp_sn4, show.values = TRUE, width = 0.1, title = "effect of competition on seeds number per infructescence") 
+
+### weight per infructescence
+
+glm_allsp_wpi <- glm(log(weight.inf.log)~condi, data=df)
+glm_allsp_wpi
+glm_allsp_wpi2 <- glm(log(weight.inf.log)~site, data=df)
+glm_allsp_wpi3 <- glm(log(weight.inf.log)~temperature, data=df)
+glm_allsp_wpi4 <- glm(log(weight.inf.log)~treat2, data=df)
+
+
+sjPlot::tab_model(glm_allsp_wpi,show.intercept = T)
+plot_model(glm_allsp_wpi, show.values = TRUE, width = 0.1, title = "effect of treatments on seed weight per infructescence") 
+
+sjPlot::tab_model(glm_allsp_wpi2,show.intercept = T)
+plot_model(glm_allsp_wpi2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seed weight per infructescence") 
+
+sjPlot::tab_model(glm_allsp_wpi3,show.intercept = T)
+plot_model(glm_allsp_wpi3, show.values = TRUE, width = 0.1, title = "effect of warming on seed weight per infructescence") 
+
+sjPlot::tab_model(glm_allsp_wpi3,show.intercept = T)
+plot_model(glm_allsp_wpi4, show.values = TRUE, width = 0.1, title = "effect of competition on seeds number per infructescence") 
+
+
+let's focus on PL
+
+df_PL<- df[df$species== "PL",]
+glm_PL_wpi <- glm(log(weight.inf.log)~condi, data=df_PL)
+summary(glm_PL_wpi)
+glm_PL_wpi2 <- glm(log(weight.inf.log)~site, data=df_PL)
+summary(glm_PL_wpi2 )
+glm_PL_wpi3 <- glm(log(weight.inf.log)~temperature, data=df_PL)
+
+
+sjPlot::tab_model(glm_PL_wpi,show.intercept = T)
+plot_model(glm_PL_wpi, show.values = TRUE, width = 0.1, title = "effect of treatments on seeds number per infructescence") 
+sjPlot::tab_model(glm_PL_wpi2,show.intercept = T)
+plot_model(glm_PL_wpi2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seeds number per infructescence") 
+
+sjPlot::tab_model(glm_PL_wpi3,show.intercept = T)
+plot_model(glm_PL_wpi3, show.values = TRUE, width = 0.1, title = "effect of temperature on seeds number per infructescence") 
+
+### weight per seed
+
+glm_allsp_wps <- glm(log(weight.seed.log)~condi, data=df)
+glm_allsp_wps
+glm_allsp_wps2 <- glm(log(weight.seed.log)~site, data=df)
+glm_allsp_wps3 <- glm(log(weight.seed.log)~temperature, data=df)
+glm_allsp_wps4 <- glm(log(weight.seed.log)~treat2, data=df)
+
+
+sjPlot::tab_model(glm_allsp_wps,show.intercept = T)
+plot_model(glm_allsp_wps, show.values = TRUE, width = 0.1, title = "effect of treatments on seed weight per seed") 
+
+sjPlot::tab_model(glm_allsp_wps2,show.intercept = T)
+plot_model(glm_allsp_wps2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seed weight per seed") 
+
+sjPlot::tab_model(glm_allsp_wps3,show.intercept = T)
+plot_model(glm_allsp_wps3, show.values = TRUE, width = 0.1, title = "effect of warming on seed weight per seed") 
+
+sjPlot::tab_model(glm_allsp_wps3,show.intercept = T)
+plot_model(glm_allsp_wps4, show.values = TRUE, width = 0.1, title = "effect of competition on seed weight per seed") 
+
+their might be a problem because my numbers are so small.
+
+QQplot
+
+  
+  
+qqnorm(glm_allsp_wpi$residuals,main="normal residuals qqplot seed number per inf")
+qqline(glm_allsp_wpi$residuals)
+qqnorm(log(glm_allsp_wpi$residuals),main="log(residuals) qqplot seed number per inf")
+qqline(log(glm_allsp_wpi$residuals))
+
+looks not so bad. maybe we should delete some outbreakers. 
+
+
+qqnorm(log(glm_PL_wpi$residuals),main="log(residuals) qqplot PL seed number per inf")
+qqline(log(glm_PL_wpi$residuals))
+
+seed number with block and species random effect
+#glmm
+
+##seed number
+```{r}
+#glmm_sn1<- glmer(seeds_number.indiv~condi +  (1|blockID)+ (1|species), data=df,family= poisson, offset=flowers)
+
+#releveling temperature
+df$temp<-relevel(as.factor(df$temperature),"ambient HS")
+levels(df$temp)
+
+glmm_sn1<- glmer.nb(seeds_number.inf~condi + (1|blockID)+ (1|species), data=df)
+#gllm_test<-glmer.nb(seeds_number.inf~condi + (1|blockID)+ (1|species), data=df)
+
+glmm_sn2<- glmer.nb(seeds_number.inf~site + (1|blockID)+ (1|species), data=df)
+
+glmm_sn3<- glmer.nb(seeds_number.inf~temp +  (1|blockID)+ (1|species), data=df)
+
+
+glmm_sn4<- glmer.nb(seeds_number.inf~treat2 +  (1|blockID)+ (1|species), data=df)
+
+
+sjPlot::tab_model(glmm_sn1,show.intercept = T)
+sjPlot::plot_model(glmm_sn1, show.values = TRUE, width = 0.1, title = "effect of treatment on seed number per infructescence")
+
+
+sjPlot::tab_model(glmm_sn2,show.intercept = T)
+sjPlot::plot_model(glmm_sn2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_sn3,show.intercept = T)
+plot_model(glmm_sn3, show.values = TRUE, width = 0.1, title = "effect of warming on seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_sn4,show.intercept = T)
+plot_model(glmm_sn4, show.values = TRUE, width = 0.1, title = "effect of competition on seeds number per infructescence") 
+```
+perhaps for the effect of temperature, I should add the others variable as random effect?
+
+visualisation of the random effect
+```{r}
+rr<-ranef(glmm_sn1,condVar=TRUE)
+aa<-broom::augment(rr)
+g1 <- ggplot(aa,aes(estimate,level,xmin=lb,xmax=ub))+
+         geom_errorbarh(height=0)+
+         geom_vline(xintercept=0,lty=2)+
+         geom_point()
+g1
+```
+how do I interpret this?
+                      
+### post hoc analysis
+```{r}
+summary(glht(glmm_sn1, mcp(condi="Tukey")))
+
+```
+
+
+
+### check performance
+```{r}
+check_glmm_test<-check_model(gllm_test)
+plot(check_glmm_test)
+```
+
+```{r}
+check_glmm_sn1<-check_model(glmm_sn1)
+plot(check_glmm_sn1)
+```
+
+
+```{r}
+check_overdispersion(glmm_sn1)
+
+```
+seems not so bad in term of overdispersion ?
+final graph
+```{r}
+a<-fixef(glmm_sn1)
+b<-as.data.frame(a)
+rname<- gsub("condi", "", row.names(b)[-1])
+b<-append(b[,][-1],0)
+rname<-append(rname,"HS A")
+
+#confidence interval
+CI<-coef(summary(glmm_sn1))
+CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
+CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
+
+df_plot<-data.frame(condi=rname,value=b)
+df_plot<-df_plot %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CI)
+
+
+
+plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Warming, transplantation and competition influence seed number per infructescence")
+plot_final
+
+```
+
+```{r}
+preds <- broom::augment(glmm_sn1, newdata = tibble(condi = df$condi), se_fit= TRUE, type.predict = "link") |> mutate(.upper = exp(.fitted + 1.96 * .sqrtXwt), .lower = exp(.fitted - 1.96 * .sqrtXwt), .fitted = exp(.fitted))
+
+preds
+```
+ggpredict : NS
+```{r}
+plot(ggpredict(glmm_sn1, terms = "condi"))
+```
+
+
+### interaction between variables for seed number
+#### temperature*competition
+NS
+```{r}
+glmm_sn_tc<- glmer(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=df,family=poisson)
+
+
+sjPlot::tab_model(glmm_sn_tc,show.intercept = T)
+plot_model(glmm_sn_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on seeds number per infructescence") 
+```
+anova type 2, 3?
+
+```{r}
+Anova(glmm_sn_tc_2)
+Anova(glmm_sn_tc_2, type = 3)
+```
+
+#### transplantation*competition
+```{r}
+glmm_sn_sc<- glmer.nb(seeds_number.inf~site*treat2 + (1|blockID)+ (1|species), data=df)
+
+
+sjPlot::tab_model(glmm_sn_sc,show.intercept = T)
+plot_model(glmm_sn_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on seeds number per infructescence") 
+```
+```{r}
+Anova(glmm_sn_sc, type = 2)
+Anova(glmm_sn_sc, type = 3)
+```
+test per species
+TP: NS
+```{r}
+glmm_sn_TP<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="TP",])
+
+sjPlot::tab_model(glmm_sn_TP,show.intercept = T)
+sjPlot::plot_model(glmm_sn_TP, show.values = TRUE, width = 0.1, title = "effect of treatment on TP seed number per infructescence")
+
+
+summary(glht(glmm_sn_TP, mcp(condi="Tukey")))
+```
+CN: NS
+```{r}
+glmm_sn_CN<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="CN",])
+
+sjPlot::tab_model(glmm_sn_CN,show.intercept = T)
+sjPlot::plot_model(glmm_sn_CN, show.values = TRUE, width = 0.1, title = "effect of treatment on TP seed number per infructescence")
+
+
+summary(glht(glmm_sn_CN, mcp(condi="Tukey")))
+```
+SP: nothing significant
+```{r}
+glmm_sn_SP<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="SP",])
+
+sjPlot::tab_model(glmm_sn_SP,show.intercept = T)
+sjPlot::plot_model(glmm_sn_SP, show.values = TRUE, width = 0.1, title = "effect of treatment on SP seed number per infructescence")
+
+
+summary(glht(glmm_sn_SP, mcp(condi="Tukey")))
+```
+
+LV: nothing significant
+```{r}
+glmm_sn_LV<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="LV",])
+
+sjPlot::tab_model(glmm_sn_LV,show.intercept = T)
+sjPlot::plot_model(glmm_sn_LV, show.values = TRUE, width = 0.1, title = "effect of treatment on LV seed number per infructescence")
+
+
+summary(glht(glmm_sn_LV, mcp(condi="Tukey")))
+```
+
+PL: effect of transplantation in high site
+```{r}
+glmm_sn_PL<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="PL",])
+glmm_sn2_PL<- glmer.nb(seeds_number.inf~site + (1|blockID), data=df[df$species=="PL",])
+
+glmm_sn3_PL<- glmer.nb(seeds_number.inf~temp +  (1|blockID), data=df[df$species=="PL",])
+
+
+glmm_sn4_PL<- glmer.nb(seeds_number.inf~treat2 +  (1|blockID), data=df[df$species=="PL",])
+
+sjPlot::tab_model(glmm_sn_PL,show.intercept = T)
+sjPlot::plot_model(glmm_sn_PL, show.values = TRUE, width = 0.1, title = "effect of treatment on PL seed number per infructescence")
+
+sjPlot::tab_model(glmm_sn2_PL,show.intercept = T)
+sjPlot::plot_model(glmm_sn2_PL, show.values = TRUE, width = 0.1, title = "effect of transplantation on PL seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_sn3_PL,show.intercept = T)
+plot_model(glmm_sn3_PL, show.values = TRUE, width = 0.1, title = "effect of warming on PL seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_sn4_PL,show.intercept = T)
+plot_model(glmm_sn4_PL, show.values = TRUE, width = 0.1, title = "effect of competition on PL seeds number per infructescence") 
+
+
+
+summary(glht(glmm_sn_PL, mcp(condi="Tukey")))
+```
+LM:effect of competition
+```{r}
+glmm_sn1_LM<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="LM",])
+
+
+
+glmm_sn2_LM<- glmer.nb(seeds_number.inf~site + (1|blockID), data=df[df$species=="LM",])
+
+glmm_sn3_LM<- glmer.nb(seeds_number.inf~temp +  (1|blockID), data=df[df$species=="LM",])
+
+
+glmm_sn4_LM<- glmer.nb(seeds_number.inf~treat2 +  (1|blockID), data=df[df$species=="LM",])
+
+sjPlot::tab_model(glmm_sn1_LM,show.intercept = T)
+sjPlot::plot_model(glmm_sn1_LM, show.values = TRUE, width = 0.1, title = "effect of treatment on LM seed number per infructescence")
+
+sjPlot::tab_model(glmm_sn2_LM,show.intercept = T)
+sjPlot::plot_model(glmm_sn2_LM, show.values = TRUE, width = 0.1, title = "effect of transplantation on LM seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_sn3_LM,show.intercept = T)
+plot_model(glmm_sn3_LM, show.values = TRUE, width = 0.1, title = "effect of warming on LM seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_sn4_LM,show.intercept = T)
+plot_model(glmm_sn4_LM, show.values = TRUE, width = 0.1, title = "effect of competition on LM seeds number per infructescence") 
+```
+
+```{r}
+summary(glht(glmm_sn_LM, mcp(condi="Tukey")))
+
+```
+
+```{r}
+a<-fixef(glmm_sn_LM)
+b<-as.data.frame(a)
+rname<- gsub("condi", "", row.names(b)[-1])
+b<-append(b[,][-1],0)
+rname<-append(rname,"HS A")
+
+#confidence interval
+CI<-coef(summary(glmm_sn_LM))
+CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
+CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
+
+df_plot<-data.frame(condi=rname,value=b)
+df_plot<-df_plot %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CI)
+
+
+
+plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Warming, transplantation and competition influence seed number per infructescence")
+plot_final
+
+```
+PS:NS
+```{r}
+glmm_sn_PS<- glmer.nb(seeds_number.inf~condi + (1|blockID), data=df[df$species=="PS",])
+
+sjPlot::tab_model(glmm_sn_PS,show.intercept = T)
+sjPlot::plot_model(glmm_sn_PS, show.values = TRUE, width = 0.1, title = "effect of treatment on PS seed number per infructescence")
+
+
+summary(glht(glmm_sn_PS, mcp(condi="Tukey")))
+```
+
+## seed weight per seed
+
+```{r}
+glmm_wps1<- lmer(log(weight.seed.log)~condi + (1|blockID)+ (1|species), data=df)
+# log distribution : no need of generalized
+
+glmm_wps2<- lmer(log(weight.seed.log)~site + (1|blockID)+ (1|species), data=df)
+
+glmm_wps3<- lmer(log(weight.seed.log)~temp + (1|blockID)+ (1|species), data=df)
+
+glmm_wps4<- lmer(log(weight.seed.log)~treat2 + (1|blockID)+ (1|species), data=df)
+
+
+
+sjPlot::tab_model(glmm_wps1,show.intercept = T)
+plot_model(glmm_wps1, show.values = TRUE, width = 0.1, title = "effect of treatments on seed weight ")  
+
+sjPlot::tab_model(glmm_wps2,show.intercept = T)
+plot_model(glmm_wps2, show.values = TRUE, width = 0.1, title = "effect of transplantation on seeds weight ") 
+
+sjPlot::tab_model(glmm_wps3,show.intercept = T)
+plot_model(glmm_wps3, show.values = TRUE, width = 0.1, title = "effect of warming on seeds weight ") 
+
+sjPlot::tab_model(glmm_wps4,show.intercept = T)
+plot_model(glmm_wps4, show.values = TRUE, width = 0.1, title = "effect of competition on seeds weight ") 
+```
+
+```{r}
+summary(glht(glmm_wps1, mcp(condi="Tukey")))
+
+```
+
+### check model
+```{r}
+plot(check_model(glmm_wps1, detrend= FALSE))
+```
+#### final plot
+```{r}
+aw<-fixef(glmm_wps1)
+bw<-as.data.frame(aw)
+rnamew<- gsub("condi", "", row.names(bw)[-1])
+bw<-append(bw[,][-1],0)
+rnamew<-append(rnamew,"HS A")
+
+#confidence interval
+CIw<-coef(summary(glmm_sn1))
+CI_HSAw<-CIw[,"Std. Error"][1]/a[1] #à vérifier
+CIw<-as.data.frame(append(CIw[,"Std. Error"][-1],CI_HSAw))[,]
+
+df_plotw<-data.frame(condi=rnamew,value=bw)
+df_plotw<-df_plotw %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CIw)
+
+
+
+plot_finalw<-ggplot(df_plotw,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Only warming has an effect on seed weight ")
+plot_finalw
+
+```
+
+
+
+## effect of interactions between variables on seed weight
+### temperature * competition
+```{r}
+glmm_wps_tc<- lmer(log(weight.seed.log)~temp*treat2 + (1|blockID)+ (1|species), data=df)
+
+
+sjPlot::tab_model(glmm_wps_tc,show.intercept = T)
+plot_model(glmm_wps_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on seeds number per infructescence") 
+```
+? how could I do this. what 's the difference between type II and III
+```{r}
+Anova(glmm_wps_tc, type = 2)
+Anova(glmm_wps_tc, type = 3)
+```
+
+
+```{r}
+#summary(glht(glmm_sn_tc, mcp(temperature="Tukey",treat2="Tukey")))
+
+```
+
+temperature*site : aucun sens
+
+glmm_sn_ts<- glmer(seeds_number.inf~site*temp + (1|blockID)+ (1|species), data=df,family= poisson)
+
+
+sjPlot::tab_model(glmm_sn_ts,show.intercept = T)
+plot_model(glmm_sn_ts, show.values = TRUE, width = 0.1, title = "interaction of temperature and site on seeds number per infructescence") 
+
+site*competition
+```{r}
+glmm_wps_sc<- lmer(log(weight.seed.log)~site*treat2 + (1|blockID)+ (1|species), data=df)
+
+
+sjPlot::tab_model(glmm_wps_sc,show.intercept = T)
+plot_model(glmm_wps_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on seeds weight per infructescence") 
+```
+```{r}
+Anova(glmm_wps_sc, type = 2)
+Anova(glmm_wps_sc, type = 3)
+```
+
+### test per species
+TP: NS
+```{r}
+glmm_wps_TP<- lmer(log(weight.seed.log)~condi + (1|blockID), data=df[df$species=="TP",])
+
+sjPlot::tab_model(glmm_wps_TP,show.intercept = T)
+sjPlot::plot_model(glmm_wps_TP, show.values = TRUE, width = 0.1, title = "effect of treatment on TP seed number per infructescence")
+
+
+summary(glht(glmm_wps_TP, mcp(condi="Tukey")))
+```
+CN: NS
+```{r}
+glmm_wps_CN<- lmer(log(weight.seed.log)~condi + (1|blockID), data=df[df$species=="CN",])
+
+sjPlot::tab_model(glmm_wps_CN,show.intercept = T)
+sjPlot::plot_model(glmm_wps_CN, show.values = TRUE, width = 0.1, title = "effect of treatment on TP seed number per infructescence")
+
+
+summary(glht(glmm_wps_CN, mcp(condi="Tukey")))
+```
+SP: effect of competition 
+```{r}
+glmm_wps_SP<- lmer(log(weight.seed.log)~condi + (1|blockID), data=df[df$species=="SP",])
+
+sjPlot::tab_model(glmm_wps_SP,show.intercept = T)
+sjPlot::plot_model(glmm_wps_SP, show.values = TRUE, width = 0.1, title = "effect of treatment on SP seed number per infructescence")
+
+
+summary(glht(glmm_wps_SP, mcp(condi="Tukey")))
+```
+
+LV: nothing significant
+```{r}
+glmm_wps_LV<- lmer(log(weight.seed.log)~condi + (1|blockID), data=df[df$species=="LV",])
+
+sjPlot::tab_model(glmm_wps_LV,show.intercept = T)
+sjPlot::plot_model(glmm_wps_LV, show.values = TRUE, width = 0.1, title = "effect of treatment on LV seed number per infructescence")
+
+
+summary(glht(glmm_wps_LV, mcp(condi="Tukey")))
+```
+
+PL: effect of transplantation in high site
+```{r}
+glmm_wps_PL<- lmer(log(weight.seed.log)~condi + (1|blockID), data=df[df$species=="PL",])
+glmm_wps2_PL<- lmer(log(weight.seed.log)~site + (1|blockID), data=df[df$species=="PL",])
+
+glmm_wps3_PL<- lmer(log(weight.seed.log)~temp +  (1|blockID), data=df[df$species=="PL",])
+
+
+glmm_wps4_PL<- lmer(log(weight.seed.log)~treat2 +  (1|blockID), data=df[df$species=="PL",])
+
+sjPlot::tab_model(glmm_wps_PL,show.intercept = T)
+sjPlot::plot_model(glmm_wps_PL, show.values = TRUE, width = 0.1, title = "effect of treatment on PL seed number per infructescence")
+
+sjPlot::tab_model(glmm_wps2_PL,show.intercept = T)
+sjPlot::plot_model(glmm_wps2_PL, show.values = TRUE, width = 0.1, title = "effect of transplantation on PL seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_wps3_PL,show.intercept = T)
+plot_model(glmm_wps3_PL, show.values = TRUE, width = 0.1, title = "effect of warming on PL seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_wps4_PL,show.intercept = T)
+plot_model(glmm_wps4_PL, show.values = TRUE, width = 0.1, title = "effect of competition on PL seeds number per infructescence") 
+
+
+
+summary(glht(glmm_wps_PL, mcp(condi="Tukey")))
+```
+LM: NS
+```{r}
+glmm_wps1_LM<- lmer(log(weight.seed.log)~condi + (1|blockID), data=df[df$species=="LM",])
+
+
+
+glmm_wps2_LM<- lmer(log(weight.seed.log)~site + (1|blockID), data=df[df$species=="LM",])
+
+glmm_wps3_LM<- lmer(log(weight.seed.log)~temp +  (1|blockID), data=df[df$species=="LM",])
+
+
+glmm_wps4_LM<- lmer(log(weight.seed.log)~treat2 +  (1|blockID), data=df[df$species=="LM",])
+
+sjPlot::tab_model(glmm_wps1_LM,show.intercept = T)
+sjPlot::plot_model(glmm_wps1_LM, show.values = TRUE, width = 0.1, title = "effect of treatment on LM seed number per infructescence")
+
+sjPlot::tab_model(glmm_wps2_LM,show.intercept = T)
+sjPlot::plot_model(glmm_wps2_LM, show.values = TRUE, width = 0.1, title = "effect of transplantation on LM seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_wps3_LM,show.intercept = T)
+plot_model(glmm_wps3_LM, show.values = TRUE, width = 0.1, title = "effect of warming on LM seeds number per infructescence") 
+
+sjPlot::tab_model(glmm_wps4_LM,show.intercept = T)
+plot_model(glmm_wps4_LM, show.values = TRUE, width = 0.1, title = "effect of competition on LM seeds number per infructescence") 
+```
+
+no interactions
+
+Community Weighted Mean CWM
+library(FD)
+
+df_TP <- df_TP %>% 
+  mutate(
+    flowers = replace(flowers, "NULL", NA)
+  )
+df %>% 
+  drop_na(var2)
+
+res.aov <- jobsatisfaction %>% anova_test(score ~ gender * education_level)
+res.aov
+qqq plot :
+
+qqnorm(scale(body_mass))
+abline(a=0, b=1, col = "red")
+
+
+
+ggplot(df, aes(x_var, y_var)) +
+  geom_point() +
+  facet_wrap(vars(category_var))
+
+ggplot(data_air_nona, aes(x = Month, y = Ozone))
+
+box_plot +
+    geom_boxplot() +
+    geom_dotplot(binaxis = 'y',
+        dotsize = 1,
+        stackdir = 'center') +
+    theme_classic()
+
+ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
+  geom_bar(stat="identity")
+
+
+facet grid
+
