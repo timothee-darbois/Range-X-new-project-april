@@ -543,7 +543,7 @@ plot(ggpredict(glmm_sn1, terms = "condi"))
 #### temperature*competition
 NS
 ```{r}
-glmm_sn_tc<- glmer(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=df,family=poisson)
+glmm_sn_tc<- glmer.nb(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=df)
 
 
 sjPlot::tab_model(glmm_sn_tc,show.intercept = T)
@@ -704,6 +704,7 @@ sjPlot::plot_model(glmm_sn_PS, show.values = TRUE, width = 0.1, title = "effect 
 summary(glht(glmm_sn_PS, mcp(condi="Tukey")))
 ```
 
+
 ## seed weight per seed
 
 ```{r}
@@ -762,7 +763,7 @@ plot_finalw<-ggplot(df_plotw,aes(x=competition,y=value,fill=temperature))+
   geom_dotplot(binaxis='y',dotsize = 2)+
   geom_path(aes(group = temperature, color = temperature))+
   ylab("value of glmm")+
-  ggtitle("Only warming has an effect on seed weight ")
+  ggtitle("Only the transplantation has an effect on seed weight ")
 plot_finalw
 
 ```
