@@ -794,9 +794,9 @@ sjPlot::plot_model(glmm_dm4, show.values = TRUE, width = 0.1, title = "effect of
 ```
 ## interactions
 ```{r}
-glmm_dm_sc<- lmer(LDMC~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ldmc_sc<- lmer(LDMC~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_dm_tc<- lmer(LDMC~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ldmc_tc<- lmer(LDMC~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_ldmc_sc,show.intercept = T)

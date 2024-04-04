@@ -30,6 +30,8 @@ library(lme4)
 library(interactions)
 library(multcomp)
 library(effects)
+library(ggeffects)
+
 
 ```
 
@@ -156,22 +158,30 @@ all_trait_pca$thickness_3<-NULL
 select(-c(var1,var2,...))
 
 ```{r}
-Factoshiny(all_trait_pca)
+#Factoshiny(all_trait_pca)
 
 ```
 ```{r}
-colnames(all_trait_pca[,c(1,6,9,10,11,12,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,40,41,42,46,50)])
+colnames(all_trait_pca[,c(
+  
+1,6,9,10,11,12,24,25,26,27,28,29,30,31,32,34,35,36,37,38,39,41,42,43,47,51)])
+colnames(all_trait_pca[,c(1,8,13,16,20,24,25)])
 
 ```
-"merge_ID" "remark","block", "treat", "species.y", "coord", "herbivory_leaf"   "herbivory_flower", "nathan_old_new", "tillers_yes_no" ,"date.y","observer","scribe","comment", "site.y","ID.y", "date",  "site",  "species", "treat1.y" ,"treat2.y","plotID.y" ,"positionID.y", "positionID_clean","student","temperature"
+"merge_ID", "remark","block", "treat", "species.y", "coord", "herbivory_leaf"   "herbivory_flower", "nathan_old_new", "tillers_yes_no" ,"date.y","observer","scribe","comment", "site.y","ID.y", "date",  "site",  "species", "treat1.y" ,"treat2.y","plotID.y" ,"positionID.y", "positionID_clean","student","temperature"
+
+"merge_ID","thickness","height_veg_cm","height_rep_cm","petiole_length_mm","herbivory_leaf","herbivory_flower" 
 
 
 ```{r}
 
 
+index_pca<-which(names(all_trait_pca)%in%c("merge_ID", "remark","block", "treat", "species.y", "coord", "herbivory_leaf" ,  "herbivory_flower", "nathan_old_new", "tillers_yes_no" ,"date.y","observer","scribe","comment", "site.y","ID.y", "date",  "site",  "species", "treat1.y" ,"treat2.y","plotID.y" ,"positionID.y", "positionID_clean","student","temperature") )
+quali_sup<-grep("condi",colnames(all_trait_pca))
+quanti_sup<-which(names(all_trait_pca)%in%c("merge_ID","thickness","height_veg_cm","height_rep_cm","petiole_length_mm","herbivory_leaf","herbivory_flower" ))
 
 
-res.PCA<-PCA(all_trait_pca[,-c(1,6,9,10,11,12,24,25,26,27,28,29,30,31,32,34,35,36,37,38,39,41,42,43,47,51)],quali.sup=c(23),quanti.sup=c(1,8,13,16,19,24,25),graph=FALSE)
+res.PCA<-PCA(all_trait_pca[,-index_pca],quali.sup=c(23),quanti.sup=quanti_sup,graph=FALSE)
 plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
 plotellipses(res.PCA, keepvar=23,invisible=c('ind','ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
 plotellipses(res.PCA, keepvar=23,invisible=c('ind.sup'),title="Graph of the individuals",label =c('quali'))
@@ -181,10 +191,14 @@ dimdesc(res.PCA)
 NB: les ellipses sont au seuil 95%: seuil de confiance du barycentre
 
 ```{r}
-res.PCA<-PCA(all_trait_pca[,-c(1,6,9,10,11,12,24,25,26,27,28,29,30,31,32,33,34,35,37,38,40,41,42,46,47,50)],quali.sup=c(18),quanti.sup=c(1,8,13,16,19,23,24),graph=FALSE)
+index_pca<-which(names(all_trait_pca)%in%c("merge_ID", "remark","block", "treat", "species.y", "coord", "herbivory_leaf" ,  "herbivory_flower", "nathan_old_new", "tillers_yes_no" ,"date.y","observer","scribe","comment", "site.y","ID.y", "date",  "site",  "condi", "treat1.y" ,"treat2.y","plotID.y" ,"positionID.y", "positionID_clean","student","temperature") )
+
+
+res.PCA<-PCA(all_trait_pca[,-index_pca],quali.sup=c(19),quanti.sup=c(1,8,13,16,20,24,25),graph=FALSE)
+
 plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
-plotellipses(res.PCA, keepvar=18,invisible=c('ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
-plotellipses(res.PCA, keepvar=18,invisible=c('ind','ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
+plotellipses(res.PCA, keepvar=19,invisible=c('ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
+plotellipses(res.PCA, keepvar=19,invisible=c('ind','ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
 
 ```
 
@@ -211,7 +225,7 @@ uscores1 <- inner_join(rownames_to_column(dune.env), rownames_to_column(data.fra
 vscores <- data.frame(dune.pca$CA$v)
 
 dudi.pca:
-```{r}
+
 acp<-dudi.pca(all_trait_pca,scale=F,scannf=F,nf=5)
 acp<-dudi.pca(all_trait_pca,scale=F,)
 
@@ -226,18 +240,16 @@ s.label(acp$li, xax = 2, yax = 3)
 
 
 
-```
+
 nipals(d[,c(1,2)])
 
-```{r}
+
 discr<-discrimin(acp,as.factor(all_trait_pca$condi),scannf=F,nf=4)
 plot(discr)
 s.label(discr$li, xax = 1, yax = 2)
 s.class(dfxy = discr$li, fac = as.factor(all_trait_pca$condi), col = gcol, xax = 1, yax = 2)
 
-```
-```{r}
-```
+
 
 ```{r}
 #covar<- subset(all_trait_pca, select = c(species))
@@ -248,7 +260,7 @@ s.class(dfxy = discr$li, fac = as.factor(all_trait_pca$condi), col = gcol, xax =
 ```
 
 
-#pairwise correlation
+pairwise correlation
 ```{r}
 ggpairs(all_trait_pca[,c("height_veg_cm", "height_rep_cm","no_leaves","no_rep_stems","seeds_number.inf" ,"weight.seed", "no_flowers_tt")], diag = list("continuous"="blank"))
 ```
@@ -337,7 +349,11 @@ combined_hveg_hrep <- hveg_hrep1 + hveg_hrep2 + hveg_hrep3 + plot_layout(ncol = 
 combined_hveg_hrep
 
 ```
-
+data = demo_trait, aes(x = height_veg_cm, y = height_rep_cm, 
+```{r}
+glmm_vegh_reph<-lmer(height_veg_cm~height_rep_cm*competition+(1|species)+(1|block),data=demo_trait)
+interact_plot(glmm_vegh_reph,pred=height_rep_cm,modx=competition,interval =TRUE, int.type="confidence")
+```
 
 ```{r}
 nol_nof1<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = site)) +
@@ -451,6 +467,11 @@ combined_wps_vegh <- wps_vegh1 + wps_vegh2 + wps_vegh3+ wps_vegh4 + plot_layout(
 combined_wps_vegh
 
 ```
+all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = treat2.y)
+```{r}
+glmm_vegh_reph<-lmer(weight.seed~height_veg_cm*site+(1|species)+(1|block),data=all_trait_pca)
+interact_plot(glmm_vegh_reph,pred=height_veg_cm,modx=site,interval =TRUE, int.type="confidence")
+```
 ## repr height weight seed
 
 ```{r}
@@ -494,6 +515,12 @@ combined_wps_reph <- wps_reph1 + wps_reph2 + wps_reph3+ wps_reph4 + plot_layout(
 combined_wps_reph
 
 ```
+all_trait_pca, aes(x = weight.seed, y = height_rep_cm, col = treat2.y)
+```{r}
+glmm_vegh_reph<-lmer(weight.seed~height_rep_cm*site+(1|species)+(1|block),data=all_trait_pca)
+interact_plot(glmm_vegh_reph,pred=height_rep_cm,modx=site,interval =TRUE, int.type="confidence")
+```
+
 
 ## wet/dry mass weight seed
 ```{r}
@@ -580,7 +607,11 @@ combined_wps_nof<- wps_nof1 + wps_nof2 + wps_nof3+ wps_nof4 + plot_layout(ncol =
 combined_wps_nof
 
 ```
-
+ all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = treat2.y
+```{r}
+glmm_vegh_reph<-lmer(weight.seed~no_flowers_tt*treat2.y+(1|species)+(1|block),data=all_trait_pca)
+interact_plot(glmm_vegh_reph,pred=no_flowers_tt,modx=treat2.y,interval =TRUE, int.type="confidence")
+```
 ## no leaves/ weight per seed
 ```{r}
 
@@ -680,7 +711,7 @@ interact_plot(fit, pred = cont.var, modx = cat.var)
 
 ```{r}
 glmm_wps_vh<-lmer(weight.seed~height_veg_cm*treat2.y+(1|species)+(1|block),data=all_trait)
-interact_plot(glmm_wps_vh,pred=height_veg_cm,modx=treat2.y)
+interact_plot(glmm_wps_vh,pred=height_veg_cm,modx=treat2.y,interval =TRUE, int.type="confidence")
 ```
 augment(mod, interval = "confidence") |> 
   ggplot(aes(x = body_mass_g, y = bill_length_mm)) +
@@ -701,6 +732,24 @@ augment(test_lm, interval = "confidence") |>
 ```{r}
 plot(predictorEffects(glmm_wps_vh))
 
+```
+mydf <- ggpredict(m.laden.1, terms = c("temp [all]", "Bioma"))
+
+ggplot(mydf, aes(x, predicted)) +
+  geom_point(data=myds, aes(temp, ladenant, color = Bioma), alpha = 0.5) + 
+  geom_line(aes(color = group)) +
+  labs(x = "temp", y = "ladenant")
+  
+glmm_wps_vh<-lmer(weight.seed~height_veg_cm*treat2.y+(1|species)+(1|block),data=all_trait)
+
+```{r}
+
+mydf <- ggpredict(glmm_wps_vh, terms = c("height_veg_cm", "treat2.y"))
+
+ggplot(mydf, aes(x, predicted)) +
+  geom_point(data=all_trait, aes(height_veg_cm, weight.seed, color = treat2.y), alpha = 0.5) + 
+  geom_line(aes(color = group)) +
+  labs(x = "vegetativ height", y = "weight per seed")
 ```
 
 
