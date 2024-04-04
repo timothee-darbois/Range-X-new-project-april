@@ -29,6 +29,7 @@ library(lme4)
 library(interactions)
 library(multcomp)
 library(effects)
+library(sjPlot)
 
 library(performance)
 library(lmerTest)
@@ -121,6 +122,9 @@ demo_trait<-demo_trait %>%
 func_trait$bulknr[is.na(func_trait$bulknr)]<-1
 func_trait<-transform(func_trait, dry_mass = `dry_mass`/`bulknr`) 
 func_trait<-transform(func_trait, wet_mass = `wet_mass`/`bulknr`) # number of leaves taken into account ) bulknr ( sometimes 2), so transformation to have the mass/ leaf
+
+# LDMC
+func_trait<-func_trait %>% mutate(LDMC=func_trait$dry_mass/func_trait$wet_mass)
 
 #sampled quarter = sometimes only 1/4 of the individual is measured. to have an approximation of measurments / indiv, we have to multiply everything by 4 when sampled_quarted="yes"
 demo_trait$sampled_quarter<-as.numeric(sub("yes",4,demo_trait$sampled_quarter))
@@ -220,9 +224,9 @@ glmm_vegh_tc<- lmer(height_veg_cm~temp*treat2.y + (1|blockID.y)+ (1|species), da
 
 
 sjPlot::tab_model(glmm_vegh_sc,show.intercept = T)
-plot_model(glmm_vegh_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on vegetative height") 
+sjPlot::plot_model(glmm_vegh_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on vegetative height") 
 sjPlot::tab_model(glmm_vegh_tc,show.intercept = T)
-plot_model(glmm_vegh_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on vegetative height") 
+sjPlot::plot_model(glmm_vegh_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on vegetative height") 
 ```
 
 
@@ -604,6 +608,239 @@ plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
   geom_path(aes(group = temperature, color = temperature))+
   ylab("value of glmm")+
   ggtitle("Warming, transplantation and competition influence the leaf length")
+plot_final
+
+```
+
+# glmm on leaf thickness
+```{r}
+glmm_lt1<- lmer(thickness~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_lt2<- lmer(thickness~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_lt3<- lmer(thickness~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+glmm_lt4<- lmer(thickness~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_lt1,show.intercept = T)
+sjPlot::plot_model(glmm_lt1, show.values = TRUE, width = 0.1, title = "effect of treatment on leaf thickness")
+
+
+sjPlot::tab_model(glmm_lt2,show.intercept = T)
+sjPlot::plot_model(glmm_lt2, show.values = TRUE, width = 0.1, title = "effect of transplantation on leaf thickness") 
+
+sjPlot::tab_model(glmm_lt3,show.intercept = T)
+sjPlot::plot_model(glmm_lt3, show.values = TRUE, width = 0.1, title = "effect of warming on leaf thickness") 
+
+sjPlot::tab_model(glmm_lt4,show.intercept = T)
+sjPlot::plot_model(glmm_lt4, show.values = TRUE, width = 0.1, title = "effect of competition on leaf thickness") 
+```
+## interactions
+```{r}
+glmm_lt_sc<- lmer(thickness~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_lt_tc<- lmer(thickness~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_lt_sc,show.intercept = T)
+plot_model(glmm_lt_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on leaf thickness") 
+sjPlot::tab_model(glmm_lt_tc,show.intercept = T)
+plot_model(glmm_lt_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition onleaf thickness") 
+```
+## post hoc analysis
+```{r}
+summary(glht(glmm_lt1, mcp(condi="Tukey")))
+
+```
+
+
+## check model
+```{r}
+check_glmm_test<-check_model(glmm_lt1)
+plot(check_glmm_test)
+```
+
+
+## final graph
+```{r}
+a<-fixef(glmm_lt1)
+b<-as.data.frame(a)
+rname<- gsub("condi", "", row.names(b)[-1])
+b<-append(b[,][-1],0)
+rname<-append(rname,"HS A")
+
+#confidence interval
+CI<-coef(summary(glmm_ll1))
+CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
+CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
+
+df_plot<-data.frame(condi=rname,value=b)
+df_plot<-df_plot %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CI)
+
+
+
+plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Warming, transplantation and competition influence the leaf thickness")
+plot_final
+
+```
+
+# glmm on dry mass
+```{r}
+glmm_dm1<- lmer(dry_mass~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_dm2<- lmer(dry_mass~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_dm3<- lmer(dry_mass~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+glmm_dm4<- lmer(dry_mass~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_dm1,show.intercept = T)
+sjPlot::plot_model(glmm_dm1, show.values = TRUE, width = 0.1, title = "effect of treatment on dry mass")
+
+
+sjPlot::tab_model(glmm_dm2,show.intercept = T)
+sjPlot::plot_model(glmm_dm2, show.values = TRUE, width = 0.1, title = "effect of transplantation on dry  mass") 
+
+sjPlot::tab_model(glmm_dm3,show.intercept = T)
+sjPlot::plot_model(glmm_dm3, show.values = TRUE, width = 0.1, title = "effect of warming on dry mass") 
+
+sjPlot::tab_model(glmm_dm4,show.intercept = T)
+sjPlot::plot_model(glmm_dm4, show.values = TRUE, width = 0.1, title = "effect of competition on dry mass") 
+```
+## interactions
+```{r}
+glmm_dm_sc<- lmer(dry_mass~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_dm_tc<- lmer(dry_mass~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_dm_sc,show.intercept = T)
+plot_model(glmm_dm_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on dry mass") 
+sjPlot::tab_model(glmm_dm_tc,show.intercept = T)
+plot_model(glmm_dm_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on dry mass") 
+```
+## post hoc analysis
+```{r}
+summary(glht(glmm_dm1, mcp(condi="Tukey")))
+
+```
+
+
+## check model
+```{r}
+check_glmm_test<-check_model(glmm_dm1)
+plot(check_glmm_test)
+```
+
+
+## final graph
+```{r}
+a<-fixef(glmm_dm1)
+b<-as.data.frame(a)
+rname<- gsub("condi", "", row.names(b)[-1])
+b<-append(b[,][-1],0)
+rname<-append(rname,"HS A")
+
+#confidence interval
+CI<-coef(summary(glmm_ll1))
+CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
+CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
+
+df_plot<-data.frame(condi=rname,value=b)
+df_plot<-df_plot %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CI)
+
+
+
+plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Warming, transplantation and competition influence the leaf length")
+plot_final
+
+```
+
+# glmm on SDMC
+```{r}
+glmm_ldmc1<- lmer(LDMC~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_ldmc2<- lmer(LDMC~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_ldmc3<- lmer(LDMC~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+glmm_ldmc4<- lmer(LDMC~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_ldmc1,show.intercept = T)
+sjPlot::plot_model(glmm_ldmc1, show.values = TRUE, width = 0.1, title = "effect of treatment on LDMC")
+
+
+sjPlot::tab_model(glmm_ldmc2,show.intercept = T)
+sjPlot::plot_model(glmm_ldmc2, show.values = TRUE, width = 0.1, title = "effect of transplantation on LDMC") 
+
+sjPlot::tab_model(glmm_ldmc3,show.intercept = T)
+sjPlot::plot_model(glmm_ldmc3, show.values = TRUE, width = 0.1, title = "effect of warming on LDMC") 
+
+sjPlot::tab_model(glmm_dm4,show.intercept = T)
+sjPlot::plot_model(glmm_dm4, show.values = TRUE, width = 0.1, title = "effect of competition on LDMC") 
+```
+## interactions
+```{r}
+glmm_dm_sc<- lmer(LDMC~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_dm_tc<- lmer(LDMC~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
+sjPlot::tab_model(glmm_ldmc_sc,show.intercept = T)
+plot_model(glmm_ldmc_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on LDMC") 
+sjPlot::tab_model(glmm_ldmc_tc,show.intercept = T)
+plot_model(glmm_ldmc_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on LDMC") 
+```
+## post hoc analysis
+```{r}
+summary(glht(glmm_ldmc1, mcp(condi="Tukey")))
+
+```
+
+
+## check model
+```{r}
+check_glmm_test<-check_model(glmm_ldmc1)
+plot(check_glmm_test)
+```
+
+
+## final graph
+```{r}
+a<-fixef(glmm_ldmc1)
+b<-as.data.frame(a)
+rname<- gsub("condi", "", row.names(b)[-1])
+b<-append(b[,][-1],0)
+rname<-append(rname,"HS A")
+
+#confidence interval
+CI<-coef(summary(glmm_ll1))
+CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
+CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
+
+df_plot<-data.frame(condi=rname,value=b)
+df_plot<-df_plot %>%mutate(competition=c("Vegetation","Bare","Bare","Vegetation", "Bare", "Vegetation"),temperature= c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"),CI=CI)
+
+
+
+plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
+  geom_dotplot(binaxis='y',dotsize = 2)+
+  geom_path(aes(group = temperature, color = temperature))+
+  ylab("value of glmm")+
+  ggtitle("Warming, transplantation and competition influence LDMC")
 plot_final
 
 ```
