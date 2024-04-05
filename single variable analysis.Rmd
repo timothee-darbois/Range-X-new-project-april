@@ -951,7 +951,7 @@ sjPlot::plot_model(glmm_dm4, show.values = TRUE, width = 0.1, title = "effect of
 ```
 ## interactions
 ```{r}
-glmm_ldmc_sc<- lmer(LDMC~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ldmc_sc<- lmer(LDMC~treat2.y*site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 glmm_ldmc_tc<- lmer(LDMC~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
@@ -1001,3 +1001,66 @@ plot_final<-ggplot(df_plot,aes(x=competition,y=value,fill=temperature))+
 plot_final
 
 ```
+
+data("Orthodont",package="MEMSS")
+fm1 <- lmer(
+    formula = distance ~ age*Sex + (age|Subject)
+    , data = Orthodont
+)
+
+glmm_ldmc_sc<- lmer(LDMC~treat2.y*site + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+newdat <- expand.grid(
+    age=c(8,10,12,14)
+    , Sex=c("Female","Male")
+    , distance = 0
+)
+newdat$distance <- predict(fm1,newdat,re.form=NA)
+mm <- model.matrix(terms(fm1),newdat)
+## or newdat$distance <- mm %*% fixef(fm1)
+pvar1 <- diag(mm %*% tcrossprod(vcov(fm1),mm))
+tvar1 <- pvar1+VarCorr(fm1)$Subject[1]  ## must be adapted for more complex models
+cmult <- 2 ## could use 1.96
+newdat <- data.frame(
+    newdat
+    , plo = newdat$distance-cmult*sqrt(pvar1)
+    , phi = newdat$distance+cmult*sqrt(pvar1)
+    , tlo = newdat$distance-cmult*sqrt(tvar1)
+    , thi = newdat$distance+cmult*sqrt(tvar1)
+)
+#plot confidence
+g0 <- ggplot(newdat, aes(x=age, y=distance, colour=Sex))+geom_point()
+g0 + geom_pointrange(aes(ymin = plo, ymax = phi))+
+    labs(title="CI based on fixed-effects uncertainty ONLY")
+
+```{r}
+
+
+glmm_ldmc_tc<- lmer(LDMC~treat2.y*temp + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+newdat <- expand.grid(
+    treat2.y=c("bare","vege")
+    , temp=c("ambient HS","warm HS", " ambient LS")
+    , LDMC = 0
+)
+
+newdat$LDMC <- predict(glmm_ldmc_tc,newdat,re.form=NA)
+mm <- model.matrix(terms(glmm_ldmc_tc),newdat)
+## or newdat$distance <- mm %*% fixef(fm1)
+pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_ldmc_tc),mm))
+tvar1 <- pvar1+VarCorr(glmm_ldmc_tc)$Subject[1]  ## must be adapted for more complex models
+cmult <- 1.96 ## could use 1.96
+newdat <- data.frame(
+    newdat
+    , plo = newdat$LDMC-cmult*sqrt(pvar1)
+    , phi = newdat$LDMC+cmult*sqrt(pvar1)
+ #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
+  #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
+)
+#plot confidence
+g0 <- ggplot(newdat, aes(x=treat2.y, y=LDMC, colour=temp))+geom_point()
+g0 +
+  geom_pointrange(aes(ymin = plo, ymax = phi))+
+    labs(title="CI based on fixed-effects uncertainty ONLY")
+```
+
