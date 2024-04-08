@@ -349,10 +349,13 @@ combined_hveg_hrep <- hveg_hrep1 + hveg_hrep2 + hveg_hrep3 + plot_layout(ncol = 
 combined_hveg_hrep
 
 ```
-data = demo_trait, aes(x = height_veg_cm, y = height_rep_cm, 
+
 ```{r}
-glmm_vegh_reph<-lmer(height_veg_cm~height_rep_cm*competition+(1|species)+(1|block),data=demo_trait)
-interact_plot(glmm_vegh_reph,pred=height_rep_cm,modx=competition,interval =TRUE, int.type="confidence")
+glmm_vegh_reph_c<-lmer(height_rep_cm~height_veg_cm*competition+(1|species)+(1|block),data=demo_trait)
+glmm_vegh_reph_t<-lmer(height_rep_cm~height_veg_cm*temperature+(1|species)+(1|block),data=demo_trait)
+g_vegh_reph_c<- interact_plot(glmm_vegh_reph_c,pred=height_veg_cm,modx=competition,interval =TRUE, int.type="confidence")
+g_vegh_reph_t<- interact_plot(glmm_vegh_reph_t,pred=height_veg_cm,modx=temperature,interval =TRUE, int.type="confidence")
+ggarrange(g_vegh_reph_c, g_vegh_reph_t, ncol=1, nrow=2)
 ```
 
 ```{r}
