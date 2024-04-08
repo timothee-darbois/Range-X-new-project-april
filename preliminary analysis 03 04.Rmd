@@ -785,6 +785,38 @@ Anova(glmm_wps_tc, type = 2)
 Anova(glmm_wps_tc, type = 3)
 ```
 
+##final graph with confidence interval
+glmm_wps_tc<- lmer(log(weight.seed.log)~temp*treat2 + (1|blockID)+ (1|species), data=df)
+
+```{r}
+newdat <- expand.grid(
+    treat2.y=c("bare","vege")
+    , temp=c("ambient HS","warm HS", " ambient LS")
+    ,no_rep_stems = 0
+)
+
+newdat$log(weight.seed.log) <- predict(glmm_wps_tc,newdat,re.form=NA)
+mm <- model.matrix(terms(glmm_wps_tc),newdat)
+## or newdat$distance <- mm %*% fixef(fm1)
+pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_wps_tc),mm))
+tvar1 <- pvar1+VarCorr(glmm_wps_tc)$Subject[1]  ## must be adapted for more complex models
+cmult <- 1.96 ## could use 1.96
+newdat <- data.frame(
+    newdat
+    , plo = newdat$log(weight.seed.log)-cmult*sqrt(pvar1)
+    , phi = newdat$log(weight.seed.log)+cmult*sqrt(pvar1)
+ #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
+  #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
+)
+#plot confidence
+g0_wps <- ggplot(newdat, aes(x=treat2.y, y=log(weight.seed.log), colour=temp)) +
+  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+  geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
+  xlab("Competition")+
+  ylab("log(seed weight)")
+
+g0_wps
+```
 
 ```{r}
 #summary(glht(glmm_sn_tc, mcp(temperature="Tukey",treat2="Tukey")))
