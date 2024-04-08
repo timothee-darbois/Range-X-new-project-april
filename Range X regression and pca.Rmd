@@ -321,21 +321,21 @@ demo_trait<-demo_trait[demo_trait$species %in% c("plalan","pimsax","cennig","tri
 
 ```{r}
 hveg_hrep1<-ggplot(data = demo_trait, aes(x = height_veg_cm, y = height_rep_cm, col = competition)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method="lm")+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "Vegetative height",
        y = "Reproductive height")
 
 hveg_hrep2<-ggplot(data = demo_trait, aes(x = height_veg_cm, y = height_rep_cm, col = site)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method="lm")+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "Vegetative height",
        y = "Reproductive height")
 
 hveg_hrep3<-ggplot(data = demo_trait, aes(x = height_veg_cm, y = height_rep_cm, col = temperature)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method="lm")+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "Vegetative height",
@@ -357,7 +357,7 @@ interact_plot(glmm_vegh_reph,pred=height_rep_cm,modx=competition,interval =TRUE,
 
 ```{r}
 nol_nof1<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = site)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method='lm')+
   xlim(0,30)+
   ylim(0,250)+
@@ -366,7 +366,7 @@ nol_nof1<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = 
        y = "number leaves")
 
 nol_nof2<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = temperature)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method='lm')+
   xlim(0,30)+
   ylim(0,250)+
@@ -374,7 +374,7 @@ nol_nof2<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = 
        x = "number flowers",
        y = "number leaves")
 nol_nof3<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = competition)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method='lm')+
   xlim(0,30)+
   ylim(0,250)+
@@ -382,7 +382,7 @@ nol_nof3<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = 
        x = "number flowers",
        y = "number leaves")
 nol_nof4<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = condi)) +
-  geom_point() +
+  geom_point(size=1) +
   geom_smooth(method='lm')+
   xlim(0,30)+
   ylim(0,250)+
@@ -399,7 +399,7 @@ combined_nol_nof
 ## number seeds/weigh seeds: seems not good
 ```{r}
 wps_sn1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = seeds_number.inf, col = treat2.y)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of competition on trade off vegetative/reproductive development",
@@ -407,7 +407,7 @@ wps_sn1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = seeds_number.inf,
        y = "seeds number/infructescence")
 
 wps_sn2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = seeds_number.inf, col = site)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of site on trade off vegetative/reproductive development",
@@ -415,7 +415,7 @@ wps_sn2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = seeds_number.inf,
        y = "seeds number/infructescence")
 
 wps_sn3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = seeds_number.inf, col = temperature)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of temperature on trade off vegetative/reproductive development",
@@ -431,7 +431,7 @@ combined_wps_sn
 ## weight per seed/ veg height: good!
 ```{r}
 wps_vegh1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = treat2.y)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of competition on trade off vegetative/reproductive development",
@@ -439,7 +439,7 @@ wps_vegh1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, 
        y = "vegetative height")
 
 wps_vegh2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = site)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of site on trade off vegetative/reproductive development",
@@ -447,7 +447,7 @@ wps_vegh2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, 
        y = "vegetative height")
 
 wps_vegh3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = temperature)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of temperature on trade off vegetative/reproductive development",
@@ -455,7 +455,7 @@ wps_vegh3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, 
        y = "vegetative height")
 
 wps_vegh4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = condi)) +
-  geom_point() +
+  geom_point(size=1) +
   xlim(0,0.003)+
   geom_smooth(method='lm')+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
@@ -469,8 +469,8 @@ combined_wps_vegh
 ```
 all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = treat2.y)
 ```{r}
-glmm_vegh_reph<-lmer(weight.seed~height_veg_cm*site+(1|species)+(1|block),data=all_trait_pca)
-interact_plot(glmm_vegh_reph,pred=height_veg_cm,modx=site,interval =TRUE, int.type="confidence")
+glmm_vegh_reph<-lmer(height_veg_cm~weight.seed*treat2.y+(1|species)+(1|block),data=all_trait_pca)
+interact_plot(glmm_vegh_reph,pred=weight.seed,modx=treat2.y,interval =TRUE, int.type="confidence")
 ```
 ## repr height weight seed
 
@@ -508,7 +508,7 @@ wps_reph4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, 
   geom_smooth(method='lm')+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "reproductiv height")
 
 combined_wps_reph <- wps_reph1 + wps_reph2 + wps_reph3+ wps_reph4 + plot_layout(ncol = 2)
 
@@ -576,7 +576,7 @@ wps_nof1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, c
   geom_smooth(method='lm')+
   labs(title = "effect of competition on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of flowers")
 
 wps_nof2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = site)) +
   geom_point() +
@@ -584,7 +584,7 @@ wps_nof2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, c
   geom_smooth(method='lm')+
   labs(title = "effect of site on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of flowers")
 
 wps_nof3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = temperature)) +
   geom_point() +
@@ -592,7 +592,7 @@ wps_nof3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, c
   geom_smooth(method='lm')+
   labs(title = "effect of temperature on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of flowers")
 
 wps_nof4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = condi)) +
   geom_point() +
@@ -600,7 +600,7 @@ wps_nof4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, c
   geom_smooth(method='lm')+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of flowers")
 
 combined_wps_nof<- wps_nof1 + wps_nof2 + wps_nof3+ wps_nof4 + plot_layout(ncol = 2)
 
@@ -609,8 +609,8 @@ combined_wps_nof
 ```
  all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = treat2.y
 ```{r}
-glmm_vegh_reph<-lmer(weight.seed~no_flowers_tt*treat2.y+(1|species)+(1|block),data=all_trait_pca)
-interact_plot(glmm_vegh_reph,pred=no_flowers_tt,modx=treat2.y,interval =TRUE, int.type="confidence")
+glmm_vegh_reph<-lmer(no_flowers_tt~weight.seed*treat2.y+(1|species)+(1|block),data=all_trait_pca)
+interact_plot(glmm_vegh_reph,pred=weight.seed,modx=treat2.y,interval =TRUE, int.type="confidence")
 ```
 ## no leaves/ weight per seed
 ```{r}

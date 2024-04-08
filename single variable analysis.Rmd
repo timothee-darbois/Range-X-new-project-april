@@ -193,14 +193,14 @@ demo_trait$temperature<-str_replace(demo_trait$temperature,"LS b","Low ambient")
 ```{r}
 
 #releveling temperature: reference = ambient HS
-all_trait_pca$temp<-relevel(as.factor(all_trait_pca$temperature),"ambient HS")
+all_trait_pca$temperature<-relevel(as.factor(all_trait_pca$temperature),"ambient HS")
 
 glmm_vegh1<- lmer(height_veg_cm~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 #gllm_test<-glmer.nb(height_veg_cm~condi + (1|blockID)+ (1|species), data=all_trait_pca)
 
 glmm_vegh2<- lmer(height_veg_cm~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_vegh3<- lmer(height_veg_cm~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_vegh3<- lmer(height_veg_cm~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_vegh4<- lmer(height_veg_cm~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -223,7 +223,7 @@ sjPlot::plot_model(glmm_vegh4, show.values = TRUE, width = 0.1, title = "effect 
 ```{r}
 glmm_vegh_sc<- lmer(height_veg_cm~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_vegh_tc<- lmer(height_veg_cm~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_vegh_tc<- lmer(height_veg_cm~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_vegh_sc,show.intercept = T)
@@ -278,7 +278,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -296,8 +296,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_vegh <- ggplot(newdat, aes(x=treat2.y, y=height_veg_cm, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_vegh <- ggplot(newdat, aes(x=treat2.y, y=height_veg_cm, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("vegetative height (cm)")
@@ -309,15 +309,13 @@ g0_vegh
 # glmm on reproductive height
 ```{r}
 
-#releveling temperature: reference = ambient HS
-all_trait_pca$temp<-relevel(as.factor(all_trait_pca$temperature),"ambient HS")
 
 glmm_reph1<- lmer(height_rep_cm~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 #gllm_test<-glmer.nb(height_veg_cm~condi + (1|blockID)+ (1|species), data=all_trait_pca)
 
 glmm_reph2<- lmer(height_rep_cm~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_reph3<- lmer(height_rep_cm~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_reph3<- lmer(height_rep_cm~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_reph4<- lmer(height_rep_cm~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -341,7 +339,7 @@ sjPlot::plot_model(glmm_reph4, show.values = TRUE, width = 0.1, title = "effect 
 ```{r}
 glmm_reph_sc<-lmer(height_rep_cm~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_reph_tc<-lmer(height_rep_cm~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_reph_tc<-lmer(height_rep_cm~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_reph_sc,show.intercept = T)
@@ -392,7 +390,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -410,8 +408,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_reph <- ggplot(newdat, aes(x=treat2.y, y=height_rep_cm, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_reph <- ggplot(newdat, aes(x=treat2.y, y=height_rep_cm, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("reproductive height (cm)")
@@ -422,16 +420,12 @@ g0_reph
 
 # glmm on leaves number
 ```{r}
-
-#releveling temperature: reference = ambient HS
-all_trait_pca$temp<-relevel(as.factor(all_trait_pca$temperature),"ambient HS")
-
 glmm_nol1<- glmer.nb(no_leaves~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 #gllm_test<-glmer.nb(height_veg_cm~condi + (1|blockID)+ (1|species), data=all_trait_pca)
 
 glmm_nol2<- glmer.nb(no_leaves~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nol3<- glmer.nb(no_leaves~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nol3<- glmer.nb(no_leaves~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_nol4<- glmer.nb(no_leaves~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -454,7 +448,7 @@ sjPlot::plot_model(glmm_nol4, show.values = TRUE, width = 0.1, title = "effect o
 ```{r}
 glmm_nol_sc<- lmer(no_leaves~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nol_tc<- lmer(no_leaves~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nol_tc<- lmer(no_leaves~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_nol_sc,show.intercept = T)
@@ -516,7 +510,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -534,8 +528,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_nol <- ggplot(newdat, aes(x=treat2.y, y=no_leaves, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_nol <- ggplot(newdat, aes(x=treat2.y, y=no_leaves, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("number of leaves/ individual")
@@ -550,7 +544,7 @@ glmm_nof1<- glmer.nb(no_flowers_tt~condi + (1|blockID.y)+ (1|species), data=all_
 
 glmm_nof2<- glmer.nb(no_flowers_tt~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nof3<- glmer.nb(no_flowers_tt~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nof3<- glmer.nb(no_flowers_tt~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_nof4<- glmer.nb(no_flowers_tt~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -573,7 +567,7 @@ sjPlot::plot_model(glmm_nof4, show.values = TRUE, width = 0.1, title = "effect o
 ```{r}
 glmm_nof_sc<- glmer.nb(no_flowers_tt~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nof_tc<- glmer.nb(no_flowers_tt~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nof_tc<- glmer.nb(no_flowers_tt~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_nof_sc,show.intercept = T)
@@ -632,7 +626,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -650,8 +644,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_nof <- ggplot(newdat, aes(x=treat2.y, y=no_flowers_tt, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_nof <- ggplot(newdat, aes(x=treat2.y, y=no_flowers_tt, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("number of inflorescence/ individual")
@@ -665,7 +659,7 @@ glmm_ll1<- lmer(leaf_length_mm~condi + (1|blockID.y)+ (1|species), data=all_trai
 
 glmm_ll2<- lmer(leaf_length_mm~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_ll3<- lmer(leaf_length_mm~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ll3<- lmer(leaf_length_mm~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_ll4<- lmer(leaf_length_mm~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -688,7 +682,7 @@ sjPlot::plot_model(glmm_ll4, show.values = TRUE, width = 0.1, title = "effect of
 ```{r}
 glmm_ll_sc<- lmer(leaf_length_mm~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_ll_tc<- lmer(leaf_length_mm~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ll_tc<- lmer(leaf_length_mm~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_ll_sc,show.intercept = T)
@@ -741,7 +735,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -759,8 +753,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_ll <- ggplot(newdat, aes(x=treat2.y, y=leaf_length_mm, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_ll <- ggplot(newdat, aes(x=treat2.y, y=leaf_length_mm, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("leaf length (mm)")
@@ -773,7 +767,7 @@ g0_ll
 glmm_lt1<- lmer(thickness~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 glmm_lt2<- lmer(thickness~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_lt3<- lmer(thickness~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_lt3<- lmer(thickness~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_lt4<- lmer(thickness~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -796,7 +790,7 @@ sjPlot::plot_model(glmm_lt4, show.values = TRUE, width = 0.1, title = "effect of
 ```{r}
 glmm_lt_sc<- lmer(thickness~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_lt_tc<- lmer(thickness~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_lt_tc<- lmer(thickness~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_lt_sc,show.intercept = T)
@@ -849,7 +843,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -867,8 +861,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_lt <- ggplot(newdat, aes(x=treat2.y, y=thickness, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_lt <- ggplot(newdat, aes(x=treat2.y, y=thickness, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("leaf thickness (mm)")
@@ -882,7 +876,7 @@ g0_lt
 glmm_lw1<- lmer(leaf_width_mm~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 glmm_lw2<- lmer(leaf_width_mm~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_lw3<- lmer(leaf_width_mm~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_lw3<- lmer(leaf_width_mm~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_lw4<- lmer(leaf_width_mm~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -905,7 +899,7 @@ sjPlot::plot_model(glmm_lw4, show.values = TRUE, width = 0.1, title = "effect of
 ```{r}
 glmm_lw_sc<- lmer(leaf_width_mm~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_lw_tc<- lmer(leaf_width_mm~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_lw_tc<- lmer(leaf_width_mm~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_lw_sc,show.intercept = T)
@@ -958,7 +952,7 @@ plot_final
 ```{r}
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -976,8 +970,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_lw <- ggplot(newdat, aes(x=treat2.y, y=leaf_width_mm, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_lw <- ggplot(newdat, aes(x=treat2.y, y=leaf_width_mm, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("leaf width (mm)")
@@ -990,7 +984,7 @@ g0_lw
 glmm_nrs1<- glmer.nb(no_rep_stems~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 glmm_nrs2<- glmer.nb(no_rep_stems~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nrs3<- glmer.nb(no_rep_stems~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nrs3<- glmer.nb(no_rep_stems~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_nrs4<- glmer.nb(no_rep_stems~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -1014,7 +1008,7 @@ sjPlot::plot_model(glmm_nrs4, show.values = TRUE, width = 0.1, title = "effect o
 ```{r}
 glmm_nrs_sc<- glmer.nb(no_rep_stems~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nrs_tc<- glmer.nb(no_rep_stems~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nrs_tc<- glmer.nb(no_rep_stems~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_nrs_sc,show.intercept = T)
@@ -1069,7 +1063,7 @@ plot_final
 
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     ,no_rep_stems = 0
 )
 
@@ -1087,8 +1081,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_nrs <- ggplot(newdat, aes(x=treat2.y, y=no_rep_stems, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_nrs <- ggplot(newdat, aes(x=treat2.y, y=no_rep_stems, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("number of reproductive stems")
@@ -1101,7 +1095,7 @@ glmm_dm1<- lmer(dry_mass~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 glmm_dm2<- lmer(dry_mass~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_dm3<- lmer(dry_mass~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_dm3<- lmer(dry_mass~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_dm4<- lmer(dry_mass~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -1124,7 +1118,7 @@ sjPlot::plot_model(glmm_dm4, show.values = TRUE, width = 0.1, title = "effect of
 ```{r}
 glmm_dm_sc<- lmer(dry_mass~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_dm_tc<- lmer(dry_mass~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_dm_tc<- lmer(dry_mass~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_dm_sc,show.intercept = T)
@@ -1174,11 +1168,11 @@ plot_final
 ```
 #final graph with confidence interval
 ```{r}
-glmm_dm_tc<- lmer(dry_mass~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_dm_tc<- lmer(dry_mass~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     , dry_mass = 0
 )
 
@@ -1196,8 +1190,8 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_dm <- ggplot(newdat, aes(x=treat2.y, y=dry_mass, colour=temp))+
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_dm <- ggplot(newdat, aes(x=treat2.y, y=dry_mass, colour=temperature))+
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
 
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")
@@ -1211,7 +1205,7 @@ glmm_ldmc1<- lmer(LDMC~condi + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 glmm_ldmc2<- lmer(LDMC~site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_ldmc3<- lmer(LDMC~temp +  (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ldmc3<- lmer(LDMC~temperature +  (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 glmm_ldmc4<- lmer(LDMC~treat2.y +  (1|blockID.y)+ (1|species), data=all_trait_pca)
@@ -1234,7 +1228,7 @@ sjPlot::plot_model(glmm_dm4, show.values = TRUE, width = 0.1, title = "effect of
 ```{r}
 glmm_ldmc_sc<- lmer(LDMC~treat2.y*site + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_ldmc_tc<- lmer(LDMC~temp*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ldmc_tc<- lmer(LDMC~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_ldmc_sc,show.intercept = T)
@@ -1316,11 +1310,11 @@ g0 + geom_pointrange(aes(ymin = plo, ymax = phi))+
 
 #final graph with confidence interval
 ```{r}
-glmm_ldmc_tc<- lmer(LDMC~treat2.y*temp + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_ldmc_tc<- lmer(LDMC~treat2.y*temperature + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
-    , temp=c("ambient HS","warm HS", " ambient LS")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
     , LDMC = 0
 )
 
@@ -1338,20 +1332,59 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
-g0_ldmc <- ggplot(newdat, aes(x=treat2.y, y=LDMC, colour=temp)) +
-  geom_path(aes(group = temp, color = temp),linewidth=0.75,position = position_dodge(width = 0.15))+
+g0_ldmc <- ggplot(newdat, aes(x=treat2.y, y=LDMC, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")
 g0_ldmc
 ```
 
 
+# glmm on seed weight
+```{r}
+all_trait_pca<-all_trait_pca %>% mutate(weight.seed.log2=log(weight.seed.log))
+
+
+glmm_wps_tc<- lmer(weight.seed.log2~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+```
+#final graph with confidence interval
+```{r}
+
+newdat <- expand.grid(
+    treat2.y=c("bare","vege")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
+    , LDMC = 0
+)
+
+newdat$weight.seed.log2 <- predict(glmm_wps_tc,newdat,re.form=NA)
+mm <- model.matrix(terms(glmm_wps_tc),newdat)
+## or newdat$distance <- mm %*% fixef(fm1)
+pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_wps_tc),mm))
+tvar1 <- pvar1+VarCorr(glmm_wps_tc)$Subject[1]  ## must be adapted for more complex models
+cmult <- 1.96 ## could use 1.96
+newdat <- data.frame(
+    newdat
+    , plo = newdat$weight.seed.log2-cmult*sqrt(pvar1)
+    , phi = newdat$weight.seed.log2+cmult*sqrt(pvar1)
+ #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
+  #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
+)
+#plot confidence
+g0_wps <- ggplot(newdat, aes(x=treat2.y, y=weight.seed.log2, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
+  geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
+  xlab("Competition")+
+  ylab("log(seed weight)")
+g0_wps
+```
+
 combined <- p1 + p2 & theme(legend.position = "bottom")
 combined + plot_layout(guides = "collect")
 ```{r}
-g0_total1<-ggarrange(g0_ldmc,g0_dm, g0_nrs, g0_lw, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
+g0_total1<-ggarrange(g0_nof,g0_nol, g0_nrs, g0_ldmc, g0_lt, ncol=3, nrow=2, common.legend = TRUE, legend="bottom")
 
-g0_total2<-ggarrange(g0_lt, g0_ll, g0_nof, g0_nol,  ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
+g0_total2<-ggarrange(g0_lw, g0_ll, g0_dm, g0_vegh, g0_reph, g0_wps , ncol=3, nrow=2, common.legend = TRUE, legend="bottom")
 g0_total3<-ggarrange(g0_vegh, g0_reph, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 g0_total1
 g0_total2
