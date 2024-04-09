@@ -318,7 +318,7 @@ we leave apart HM SD and CC
 demo_trait<-demo_trait[demo_trait$species %in% c("plalan","pimsax","cennig","tripra","leuvul","luzmul", "sucpra"), ]
 ```
 
-
+# vegetative VS reproductive hight
 ```{r}
 hveg_hrep1<-ggplot(data = demo_trait, aes(x = height_veg_cm, y = height_rep_cm, col = competition)) +
   geom_point(size=1) +
@@ -349,15 +349,26 @@ combined_hveg_hrep <- hveg_hrep1 + hveg_hrep2 + hveg_hrep3 + plot_layout(ncol = 
 combined_hveg_hrep
 
 ```
+## interact plot: à poursuivre
 
 ```{r}
-glmm_vegh_reph_c<-lmer(height_rep_cm~height_veg_cm*competition+(1|species)+(1|block),data=demo_trait)
-glmm_vegh_reph_t<-lmer(height_rep_cm~height_veg_cm*temperature+(1|species)+(1|block),data=demo_trait)
+all_trait_pca<-all_trait_pca %>% mutate(competition=all_trait_pca$treat2.y)
+all_trait_pca$competition<-str_replace(all_trait_pca$competition,"vege", "vegetation")
+```
+
+
+```{r}
+glmm_vegh_reph_c<-lmer(height_rep_cm~height_veg_cm*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_vegh_reph_t<-lmer(height_rep_cm~height_veg_cm*temperature+(1|species)+(1|block),data=all_trait_pca)
 g_vegh_reph_c<- interact_plot(glmm_vegh_reph_c,pred=height_veg_cm,modx=competition,interval =TRUE, int.type="confidence")
 g_vegh_reph_t<- interact_plot(glmm_vegh_reph_t,pred=height_veg_cm,modx=temperature,interval =TRUE, int.type="confidence")
 ggarrange(g_vegh_reph_c, g_vegh_reph_t, ncol=1, nrow=2)
+summary(glmm_vegh_reph_c)
+summary(glmm_vegh_reph_t)
+
 ```
 
+# number of leaves VS number of inflorescences
 ```{r}
 nol_nof1<-ggplot(data = demo_trait, aes(x = no_flowers_tt, y = no_leaves, col = site)) +
   geom_point(size=1) +
@@ -398,6 +409,18 @@ combined_nol_nof <- nol_nof1 + nol_nof2 + nol_nof3+nol_nof4+ plot_layout(ncol = 
 
 combined_nol_nof
 ```
+## interact plot: à poursuivre
+```{r}
+glmm_nol_nof_c<-lmer(no_leaves~no_flowers_tt*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_nol_nof_t<-lmer(no_leaves~no_flowers_tt*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_nol_nof_c<- interact_plot(glmm_nol_nof_c,pred=no_flowers_tt,modx=competition,interval =TRUE, int.type="confidence")
+g_nol_nof_t<- interact_plot(glmm_nol_nof_t,pred=no_flowers_tt,modx=temperature,interval =TRUE, int.type="confidence")
+ggarrange(g_nol_nof_c, g_nol_nof_t, ncol=1, nrow=2)
+summary(glmm_nol_nof_c)
+summary(glmm_nol_nof_t)
+```
+
+
 
 ## number seeds/weigh seeds: seems not good
 ```{r}
@@ -430,7 +453,16 @@ combined_wps_sn <- wps_sn1 + wps_sn2 + wps_sn3+ plot_layout(ncol = 2)
 combined_wps_sn
 
 ```
-
+### interact plot: à poursuivre
+```{r}
+glmm_wps_sn_c<-lmer(seeds_number.inf~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_sn_t<-lmer(seeds_number.inf~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_sn_c<- interact_plot(glmm_wps_sn_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")
+g_wps_sn_t<- interact_plot(glmm_wps_sn_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")
+ggarrange(g_wps_sn_c, g_wps_sn_t, ncol=1, nrow=2)
+summary(glmm_wps_sn_c)
+summary(glmm_wps_sn_c)
+```
 ## weight per seed/ veg height: good!
 ```{r}
 wps_vegh1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = treat2.y)) +
@@ -471,10 +503,19 @@ combined_wps_vegh
 
 ```
 all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = treat2.y)
+
+### interact plot: à poursuivre
 ```{r}
-glmm_vegh_reph<-lmer(height_veg_cm~weight.seed*treat2.y+(1|species)+(1|block),data=all_trait_pca)
-interact_plot(glmm_vegh_reph,pred=weight.seed,modx=treat2.y,interval =TRUE, int.type="confidence")
+glmm_vegh_reph_c<-lmer(height_veg_cm~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_vegh_reph_t<-lmer(height_veg_cm~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_vegh_reph_c<- interact_plot(glmm_vegh_reph_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_vegh_reph_t<- interact_plot(glmm_vegh_reph_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+ggarrange(g_vegh_reph_c, g_vegh_reph_t, ncol=1, nrow=2)
+summary(glmm_vegh_reph_c)
+summary(glmm_vegh_reph_t)
 ```
+ct_plot(glmm_vegh_reph,pred=weight.seed.log,modx=treat2.y,interval =TRUE, int.type="confidence")
+
 ## repr height weight seed
 
 ```{r}
@@ -487,7 +528,7 @@ wps_reph1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, 
   geom_smooth(method='lm')+
   labs(title = "effect of competition on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "reproductive height")
 
 wps_reph2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, col = site)) +
   geom_point() +
@@ -495,7 +536,7 @@ wps_reph2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, 
   geom_smooth(method='lm')+
   labs(title = "effect of site on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "reprodutive height")
 
 wps_reph3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, col = temperature)) +
   geom_point() +
@@ -503,7 +544,7 @@ wps_reph3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, 
   geom_smooth(method='lm')+
   labs(title = "effect of temperature on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "reproductive height")
 
 wps_reph4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = height_rep_cm, col = condi)) +
   geom_point() +
@@ -519,10 +560,18 @@ combined_wps_reph
 
 ```
 all_trait_pca, aes(x = weight.seed, y = height_rep_cm, col = treat2.y)
+
+### interact plot: à poursuivre
 ```{r}
-glmm_vegh_reph<-lmer(weight.seed~height_rep_cm*site+(1|species)+(1|block),data=all_trait_pca)
-interact_plot(glmm_vegh_reph,pred=height_rep_cm,modx=site,interval =TRUE, int.type="confidence")
+glmm_wps_reph_c<-lmer(height_rep_cm~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_reph_t<-lmer(height_rep_cm~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_reph_c<- interact_plot(glmm_wps_reph_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_wps_reph_t<- interact_plot(glmm_wps_reph_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+ggarrange(g_wps_reph_c, g_wps_reph_t, ncol=1, nrow=2)
+summary(glmm_wps_reph_c)
+summary(glmm_wps_reph_t)
 ```
+
 
 
 ## wet/dry mass weight seed
@@ -533,7 +582,7 @@ wps_dm1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = t
   geom_smooth(method='lm')+
   labs(title = "effect of competition on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "dry mass")
 
 wps_dm2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = site)) +
   geom_point() +
@@ -541,7 +590,7 @@ wps_dm2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = s
   geom_smooth(method='lm')+
   labs(title = "effect of site on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "dry mass")
 
 wps_dm3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = temperature)) +
   geom_point() +
@@ -549,7 +598,7 @@ wps_dm3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = t
   geom_smooth(method='lm')+
   labs(title = "effect of temperature on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "dry mass")
 
 wps_dm4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = condi)) +
   geom_point() +
@@ -557,12 +606,22 @@ wps_dm4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = dry_mass, col = c
   geom_smooth(method='lm')+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "dry mass")
 
 combined_wps_dm <- wps_dm1 + wps_dm2 + wps_dm3+ wps_dm4 + plot_layout(ncol = 2)
 
 combined_wps_dm
 
+```
+### interact plot: à poursuivre
+```{r}
+glmm_wps_dm_c<-lmer(dry_mass~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_dm_t<-lmer(dry_mass~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_dm_c<- interact_plot(glmm_wps_dm_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_wps_dm_t<- interact_plot(glmm_wps_dm_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+ggarrange(g_wps_reph_c, g_wps_reph_t, ncol=1, nrow=2)
+summary(glmm_wps_dm_c)
+summary(glmm_wps_dm_t)
 ```
 
 
@@ -611,6 +670,19 @@ combined_wps_nof
 
 ```
  all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = treat2.y
+### interact plot: à poursuivre
+```{r}
+glmm_wps_nof_c<-lmer(no_flowers_tt~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_nof_t<-lmer(no_flowers_tt~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_nof_c<- interact_plot(glmm_wps_nof_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_wps_nof_t<- interact_plot(glmm_wps_nof_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+ggarrange(g_wps_nof_c, g_wps_nof_t, ncol=1, nrow=2)
+summary(glmm_wps_nof_c)
+summary(glmm_wps_nof_t)
+```
+if you don't log the seed weight: 
+got a alert message : Some predictor variables are on very different scales: consider rescaling
+ 
 ```{r}
 glmm_vegh_reph<-lmer(no_flowers_tt~weight.seed*treat2.y+(1|species)+(1|block),data=all_trait_pca)
 interact_plot(glmm_vegh_reph,pred=weight.seed,modx=treat2.y,interval =TRUE, int.type="confidence")
@@ -626,7 +698,7 @@ wps_nol1<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col =
   geom_smooth(method='lm')+
   labs(title = "effect of competition on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of leaves")
 
 wps_nol2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col = site)) +
   geom_point() +
@@ -634,7 +706,7 @@ wps_nol2<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col =
   geom_smooth(method='lm')+
   labs(title = "effect of site on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of leaves")
 
 wps_nol3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col = temperature)) +
   geom_point() +
@@ -642,7 +714,7 @@ wps_nol3<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col =
   geom_smooth(method='lm')+
   labs(title = "effect of temperature on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of leaves")
 
 wps_nol4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col = condi)) +
   geom_point() +
@@ -650,12 +722,22 @@ wps_nol4<-ggplot(data = all_trait_pca, aes(x = weight.seed, y = no_leaves, col =
   geom_smooth(method='lm')+
   labs(title = "effect of treatments on trade off vegetative/reproductive development",
        x = "weight/seed",
-       y = "vegetative height")
+       y = "number of leaves")
 
 combined_wps_nol<- wps_nol1 + wps_nol2 + wps_nol3+ wps_nol4 + plot_layout(ncol = 2)
 
 combined_wps_nol
 
+```
+### interact plot: à poursuivre
+```{r}
+glmm_wps_nol_c<-lmer(no_leaves~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_nol_t<-lmer(no_leaves~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_nol_c<- interact_plot(glmm_wps_nol_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_wps_nol_t<- interact_plot(glmm_wps_nol_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+ggarrange(g_wps_nol_c, g_wps_nol_t, ncol=1, nrow=2)
+summary(glmm_wps_nol_c)
+summary(glmm_wps_nol_t)
 ```
 
 ## no repr stems/ weight per seed
@@ -701,9 +783,20 @@ combined_wps_ll<- wps_ll1 + wps_ll2 + wps_ll3+ wps_ll4 + plot_layout(ncol = 2)
 combined_wps_ll
 
 ```
+### interact plot: à poursuivre
+```{r}
+glmm_wps_ll_c<-lmer(leaf_length_mm~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_ll_t<-lmer(leaf_length_mm~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_ll_c<- interact_plot(glmm_wps_ll_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight") + ylab("leaf length(mm)")
+g_wps_ll_t<- interact_plot(glmm_wps_ll_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")+ ylab("leaf length(mm)")
+ggarrange(g_wps_ll_c, g_wps_ll_t, ncol=1, nrow=2)
+summary(glmm_wps_ll_c)
+summary(glmm_wps_ll_t)
+```
 
 # what to do next : try to write a code using glmm to study these correlations
 ## weight per seed/ veg height: good!
+# brouillon
 
 library(lme4)
 fit <- glmer(resp.var ~ cont.var:cat.var + (1 | rand.eff),
