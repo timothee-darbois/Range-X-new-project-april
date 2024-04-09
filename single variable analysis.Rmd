@@ -36,7 +36,7 @@ library(lmerTest)
 
 library(ggpubr)
 
-
+library(cowplot)
 
 
 ```
@@ -302,6 +302,8 @@ g0_vegh <- ggplot(newdat, aes(x=treat2.y, y=height_veg_cm, colour=temperature)) 
   xlab("Competition")+
   ylab("vegetative height (cm)")
 
+g0_vegh<-ggdraw(add_sub(g0_vegh, "Competition: Site: Temperature: "))
+
 g0_vegh
 ```
 
@@ -413,6 +415,8 @@ g0_reph <- ggplot(newdat, aes(x=treat2.y, y=height_rep_cm, colour=temperature)) 
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("reproductive height (cm)")
+
+g0_reph<-ggdraw(add_sub(g0_reph, "Competition: Site: Temperature: "))
 
 g0_reph
 ```
@@ -534,6 +538,8 @@ g0_nol <- ggplot(newdat, aes(x=treat2.y, y=no_leaves, colour=temperature)) +
   xlab("Competition")+
   ylab("number of leaves/ individual")
 
+g0_nol<-ggdraw(add_sub(g0_nol, "Competition: Site: Temperature: "))
+
 g0_nol
 ```
 
@@ -650,6 +656,8 @@ g0_nof <- ggplot(newdat, aes(x=treat2.y, y=no_flowers_tt, colour=temperature)) +
   xlab("Competition")+
   ylab("number of inflorescence/ individual")
 
+g0_nof<-ggdraw(add_sub(g0_nof, "Competition: Site: Temperature: "))
+
 g0_nof
 ```
 
@@ -759,7 +767,11 @@ g0_ll <- ggplot(newdat, aes(x=treat2.y, y=leaf_length_mm, colour=temperature)) +
   xlab("Competition")+
   ylab("leaf length (mm)")
 
+g0_ll<-ggdraw(add_sub(g0_ll, "Competition: Site: Temperature: "))
+
 g0_ll
+
+
 ```
 
 # glmm on leaf thickness
@@ -866,6 +878,8 @@ g0_lt <- ggplot(newdat, aes(x=treat2.y, y=thickness, colour=temperature)) +
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("leaf thickness (mm)")
+
+g0_lt<-ggdraw(add_sub(g0_lt, "Competition: Site: Temperature: "))
 
 g0_lt
 ```
@@ -975,6 +989,8 @@ g0_lw <- ggplot(newdat, aes(x=treat2.y, y=leaf_width_mm, colour=temperature)) +
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("leaf width (mm)")
+
+g0_lw<-ggdraw(add_sub(g0_lw, "Competition: Site: Temperature: "))
 
 g0_lw
 ```
@@ -1087,6 +1103,8 @@ g0_nrs <- ggplot(newdat, aes(x=treat2.y, y=no_rep_stems, colour=temperature)) +
   xlab("Competition")+
   ylab("number of reproductive stems")
 
+g0_nrs<-ggdraw(add_sub(g0_nrs, "Competition: Site: Temperature: "))
+
 g0_nrs
 ```
 # glmm on dry mass
@@ -1195,6 +1213,9 @@ g0_dm <- ggplot(newdat, aes(x=treat2.y, y=dry_mass, colour=temperature))+
 
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")
+
+g0_dm<-ggdraw(add_sub(g0_dm, "Competition: Site: Temperature: "))
+
 g0_dm
 ```
 
@@ -1336,6 +1357,9 @@ g0_ldmc <- ggplot(newdat, aes(x=treat2.y, y=LDMC, colour=temperature)) +
   geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")
+
+g0_ldmc<-ggdraw(add_sub(g0_ldmc, "Competition: Site: Temperature: "))
+
 g0_ldmc
 ```
 
@@ -1376,6 +1400,8 @@ g0_wps <- ggplot(newdat, aes(x=treat2.y, y=weight.seed.log2, colour=temperature)
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
   ylab("log(seed weight)")
+
+g0_wps<-ggdraw(add_sub(g0_wps, "Competition: Site: Temperature: "))
 g0_wps
 ```
 
