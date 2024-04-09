@@ -1384,7 +1384,7 @@ combined + plot_layout(guides = "collect")
 ```{r}
 g0_total1<-ggarrange(g0_nof,g0_nol, g0_nrs, g0_ldmc, g0_lt, ncol=3, nrow=2, common.legend = TRUE, legend="bottom")
 
-g0_total2<-ggarrange(g0_lw, g0_ll, g0_dm, g0_vegh, g0_reph, g0_wps , ncol=3, nrow=2, common.legend = TRUE, legend="bottom")
+g0_total2<-ggarrange(g0_lw, g0_ll, g0_dm, g0_vegh, g0_reph, g0_wps, ncol=3, nrow=2, common.legend = TRUE, legend="bottom")
 g0_total3<-ggarrange(g0_vegh, g0_reph, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 g0_total1
 g0_total2
