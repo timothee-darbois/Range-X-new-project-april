@@ -158,9 +158,10 @@ all_trait_pca$thickness_3<-NULL
 select(-c(var1,var2,...))
 
 ```{r}
-#Factoshiny(all_trait_pca)
+Factoshiny(all_trait_pca)
 
 ```
+
 ```{r}
 colnames(all_trait_pca[,c(
   
@@ -172,6 +173,11 @@ colnames(all_trait_pca[,c(1,8,13,16,20,24,25)])
 
 "merge_ID","thickness","height_veg_cm","height_rep_cm","petiole_length_mm","herbivory_leaf","herbivory_flower" 
 
+avec moins de choses sur le graphe des variables
+
+res.PCA<-PCA(all_trait_pca[,-c(1,6,10,11,12,13,25,26,27,28,29,30,31,32,33,35,36,37,38,39,40,42,43,44,48,52,54)],quali.sup=c(24),quanti.sup=c(1,9,14,17,20,25,26,27),graph=FALSE)
+plot.PCA(res.PCA,choix='var',habillage = 'contrib',select='contrib  16',unselect=0,title="Graphe des variables de l'ACP",col.quanti.sup='#0000FF')
+plotellipses(res.PCA, keepvar=24,invisible=c('ind','ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
 
 ```{r}
 
@@ -413,8 +419,10 @@ combined_nol_nof
 ```{r}
 glmm_nol_nof_c<-lmer(no_leaves~no_flowers_tt*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
 glmm_nol_nof_t<-lmer(no_leaves~no_flowers_tt*temperature+(1|species)+(1|block),data=all_trait_pca)
-g_nol_nof_c<- interact_plot(glmm_nol_nof_c,pred=no_flowers_tt,modx=competition,interval =TRUE, int.type="confidence")
-g_nol_nof_t<- interact_plot(glmm_nol_nof_t,pred=no_flowers_tt,modx=temperature,interval =TRUE, int.type="confidence")
+g_nol_nof_c<- interact_plot(glmm_nol_nof_c,pred=no_flowers_tt,modx=competition,interval =TRUE, int.type="confidence") +
+  xlab("number of infloresences")
+g_nol_nof_t<- interact_plot(glmm_nol_nof_t,pred=no_flowers_tt,modx=temperature,interval =TRUE, int.type="confidence")+
+  xlab("number of infloresences")
 ggarrange(g_nol_nof_c, g_nol_nof_t, ncol=1, nrow=2)
 summary(glmm_nol_nof_c)
 summary(glmm_nol_nof_t)
@@ -506,10 +514,10 @@ all_trait_pca, aes(x = weight.seed, y = height_veg_cm, col = treat2.y)
 
 ### interact plot: à poursuivre
 ```{r}
-glmm_vegh_reph_c<-lmer(height_veg_cm~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
-glmm_vegh_reph_t<-lmer(height_veg_cm~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
-g_vegh_reph_c<- interact_plot(glmm_vegh_reph_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
-g_vegh_reph_t<- interact_plot(glmm_vegh_reph_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+glmm_vegh_reph_c<-lmer(height_veg_cm~weight.seed*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_vegh_reph_t<-lmer(height_veg_cm~weight.seed*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_vegh_reph_c<- interact_plot(glmm_vegh_reph_c,pred=weight.seed,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_vegh_reph_t<- interact_plot(glmm_vegh_reph_t,pred=weight.seed,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
 ggarrange(g_vegh_reph_c, g_vegh_reph_t, ncol=1, nrow=2)
 summary(glmm_vegh_reph_c)
 summary(glmm_vegh_reph_t)
@@ -672,10 +680,13 @@ combined_wps_nof
  all_trait_pca, aes(x = weight.seed, y = no_flowers_tt, col = treat2.y
 ### interact plot: à poursuivre
 ```{r}
-glmm_wps_nof_c<-lmer(no_flowers_tt~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
-glmm_wps_nof_t<-lmer(no_flowers_tt~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
-g_wps_nof_c<- interact_plot(glmm_wps_nof_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
-g_wps_nof_t<- interact_plot(glmm_wps_nof_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+glmm_wps_nof_c<-lmer(no_flowers_tt~weight.seed*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_nof_t<-lmer(no_flowers_tt~weight.seed*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_nof_c<- interact_plot(glmm_wps_nof_c,pred=weight.seed,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight") +
+  ylab("nb inflorescences")
+  
+g_wps_nof_t<- interact_plot(glmm_wps_nof_t,pred=weight.seed,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")+
+  ylab("nb inflorescences")
 ggarrange(g_wps_nof_c, g_wps_nof_t, ncol=1, nrow=2)
 summary(glmm_wps_nof_c)
 summary(glmm_wps_nof_t)
@@ -731,10 +742,10 @@ combined_wps_nol
 ```
 ### interact plot: à poursuivre
 ```{r}
-glmm_wps_nol_c<-lmer(no_leaves~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
-glmm_wps_nol_t<-lmer(no_leaves~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
-g_wps_nol_c<- interact_plot(glmm_wps_nol_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
-g_wps_nol_t<- interact_plot(glmm_wps_nol_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+glmm_wps_nol_c<-lmer(no_leaves~weight.seed*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_nol_t<-lmer(no_leaves~weight.seed*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_nol_c<- interact_plot(glmm_wps_nol_c,pred=weight.seed,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight")
+g_wps_nol_t<- interact_plot(glmm_wps_nol_t,pred=weight.seed,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")
 ggarrange(g_wps_nol_c, g_wps_nol_t, ncol=1, nrow=2)
 summary(glmm_wps_nol_c)
 summary(glmm_wps_nol_t)
@@ -785,10 +796,10 @@ combined_wps_ll
 ```
 ### interact plot: à poursuivre
 ```{r}
-glmm_wps_ll_c<-lmer(leaf_length_mm~log(weight.seed.log)*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
-glmm_wps_ll_t<-lmer(leaf_length_mm~log(weight.seed.log)*temperature+(1|species)+(1|block),data=all_trait_pca)
-g_wps_ll_c<- interact_plot(glmm_wps_ll_c,pred=weight.seed.log,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight") + ylab("leaf length(mm)")
-g_wps_ll_t<- interact_plot(glmm_wps_ll_t,pred=weight.seed.log,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")+ ylab("leaf length(mm)")
+glmm_wps_ll_c<-lmer(leaf_length_mm~weight.seed*competition+(1|species)+(1|blockID.y),data=all_trait_pca)
+glmm_wps_ll_t<-lmer(leaf_length_mm~weight.seed*temperature+(1|species)+(1|block),data=all_trait_pca)
+g_wps_ll_c<- interact_plot(glmm_wps_ll_c,pred=weight.seed,modx=competition,interval =TRUE, int.type="confidence")+ xlab("seed weight") + ylab("leaf length(mm)")
+g_wps_ll_t<- interact_plot(glmm_wps_ll_t,pred=weight.seed,modx=temperature,interval =TRUE, int.type="confidence")+ xlab("seed weight")+ ylab("leaf length(mm)")
 ggarrange(g_wps_ll_c, g_wps_ll_t, ncol=1, nrow=2)
 summary(glmm_wps_ll_c)
 summary(glmm_wps_ll_t)

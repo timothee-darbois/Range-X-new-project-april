@@ -302,7 +302,7 @@ g0_vegh <- ggplot(newdat, aes(x=treat2.y, y=height_veg_cm, colour=temperature)) 
   xlab("Competition")+
   ylab("vegetative height (cm)")
 
-g0_vegh<-ggdraw(add_sub(g0_vegh, "Competition: Site: Temperature: "))
+g0_vegh<-ggdraw(add_sub(g0_vegh, "Competition:*** Site:NS Temperature:**"))
 
 g0_vegh
 ```
@@ -371,7 +371,7 @@ b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_vegh1))
+CI<-coef(summary(glmm_reph1))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
@@ -656,7 +656,7 @@ g0_nof <- ggplot(newdat, aes(x=treat2.y, y=no_flowers_tt, colour=temperature)) +
   xlab("Competition")+
   ylab("number of inflorescence/ individual")
 
-g0_nof<-ggdraw(add_sub(g0_nof, "Competition: Site: Temperature: "))
+g0_nof<-ggdraw(add_sub(g0_nof,"  Competition:*** Site:*** Temperature:NS"))
 
 g0_nof
 ```
@@ -1356,9 +1356,10 @@ newdat <- data.frame(
 g0_ldmc <- ggplot(newdat, aes(x=treat2.y, y=LDMC, colour=temperature)) +
   geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
-  xlab("Competition")
+  xlab("Competition")+
+  ylab("LDMC(mg/g")
 
-g0_ldmc<-ggdraw(add_sub(g0_ldmc, "Competition: Site: Temperature: "))
+g0_ldmc<-ggdraw(add_sub(g0_ldmc, "Competition:*** Site:* Temperature:NS"))
 
 g0_ldmc
 ```
@@ -1401,7 +1402,46 @@ g0_wps <- ggplot(newdat, aes(x=treat2.y, y=weight.seed.log2, colour=temperature)
   xlab("Competition")+
   ylab("log(seed weight)")
 
-g0_wps<-ggdraw(add_sub(g0_wps, "Competition: Site: Temperature: "))
+g0_wps<-ggdraw(add_sub(g0_wps, "   Competition:NS Site:** Temperature:NS"))
+g0_wps
+```
+# glmm on seed weight
+```{r}
+glmm_sn_tc<- glmer.nb(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=all_trait_pca)
+
+```
+
+glmm_sn_tc<- glmer.nb(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=df)
+#final graph with confidence interval
+```{r}
+
+newdat <- expand.grid(
+    treat2.y=c("bare","vege")
+    , temperature=c("ambient HS","warm HS", " ambient LS")
+    , LDMC = 0
+)
+
+newdat$weight.seed.log2 <- predict(glmm_wps_tc,newdat,re.form=NA)
+mm <- model.matrix(terms(glmm_wps_tc),newdat)
+## or newdat$distance <- mm %*% fixef(fm1)
+pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_wps_tc),mm))
+tvar1 <- pvar1+VarCorr(glmm_wps_tc)$Subject[1]  ## must be adapted for more complex models
+cmult <- 1.96 ## could use 1.96
+newdat <- data.frame(
+    newdat
+    , plo = newdat$weight.seed.log2-cmult*sqrt(pvar1)
+    , phi = newdat$weight.seed.log2+cmult*sqrt(pvar1)
+ #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
+  #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
+)
+#plot confidence
+g0_wps <- ggplot(newdat, aes(x=treat2.y, y=weight.seed.log2, colour=temperature)) +
+  geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
+  geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
+  xlab("Competition")+
+  ylab("log(seed weight)")
+
+g0_wps<-ggdraw(add_sub(g0_wps, "   Competition:NS Site:** Temperature:NS"))
 g0_wps
 ```
 
