@@ -190,6 +190,13 @@ demo_trait$temperature<-str_replace(demo_trait$temperature,"LS b","Low ambient")
 
 
 # glmm on vegetativ height
+
+## bricolage
+```{r}
+#t<-all_trait_pca[which(all_trait_pca$species=="TP"),]
+#plot_vegh<- ggplot(all_trait_pca, aes(x=condi, y=log( ))+geom_boxplot(aes(fill=student)) + geom_dotplot(binaxis = 'y',dotsize = 0.01,stackdir = 'center') +theme_classic() 
+```
+
 ```{r}
 
 #releveling temperature: reference = ambient HS
@@ -338,6 +345,7 @@ sjPlot::plot_model(glmm_reph4, show.values = TRUE, width = 0.1, title = "effect 
 ```
 
 ## interactions
+
 ```{r}
 glmm_reph_sc<-lmer(height_rep_cm~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
@@ -531,6 +539,9 @@ newdat <- data.frame(
  #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
+
+newdat<-newdat %>% transform(no_leaves=exp(no_leaves),plo=exp(plo),phi=exp(phi))
+
 #plot confidence
 g0_nol <- ggplot(newdat, aes(x=treat2.y, y=no_leaves, colour=temperature)) +
   geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
@@ -649,6 +660,8 @@ newdat <- data.frame(
  #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
+
+newdat<-newdat %>% transform(no_flowers_tt=exp(no_flowers_tt),plo=exp(plo),phi=exp(phi))
 #plot confidence
 g0_nof <- ggplot(newdat, aes(x=treat2.y, y=no_flowers_tt, colour=temperature)) +
   geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
@@ -1074,6 +1087,7 @@ plot_final
 ```
 
 ##final graph with confidence interval
+transform(df, points = points / 2)
 
 ```{r}
 
@@ -1083,7 +1097,7 @@ newdat <- expand.grid(
     ,no_rep_stems = 0
 )
 
-newdat$no_rep_stems <- predict(glmm_nrs_tc,newdat,re.form=NA)
+newdat$no_rep_stems <- predict(glmm_nrs_tc,newdat,re.form=NA) # log link function : retransforme with exp
 mm <- model.matrix(terms(glmm_nrs_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_nrs_tc),mm))
@@ -1097,6 +1111,7 @@ newdat <- data.frame(
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
 #plot confidence
+newdat<-newdat %>% transform(no_rep_stems=exp(no_rep_stems),plo=exp(plo),phi=exp(phi))
 g0_nrs <- ggplot(newdat, aes(x=treat2.y, y=no_rep_stems, colour=temperature)) +
   geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
@@ -1407,7 +1422,7 @@ g0_wps
 ```
 # glmm on seed weight
 ```{r}
-glmm_sn_tc<- glmer.nb(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=all_trait_pca)
+glmm_sn_tc<- glmer.nb(seeds_number.inf~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 ```
 
@@ -1418,31 +1433,35 @@ glmm_sn_tc<- glmer.nb(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), d
 newdat <- expand.grid(
     treat2.y=c("bare","vege")
     , temperature=c("ambient HS","warm HS", " ambient LS")
-    , LDMC = 0
+    , seeds_number.inf = 0
 )
 
-newdat$weight.seed.log2 <- predict(glmm_wps_tc,newdat,re.form=NA)
-mm <- model.matrix(terms(glmm_wps_tc),newdat)
+newdat$seeds_number.inf <- predict(glmm_sn_tc,newdat,re.form=NA) # we are using a negative binomial family, with a log link function ( default mass package) so we transform with exp.
+mm <- model.matrix(terms(glmm_sn_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
-pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_wps_tc),mm))
-tvar1 <- pvar1+VarCorr(glmm_wps_tc)$Subject[1]  ## must be adapted for more complex models
+pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_sn_tc),mm))
+tvar1 <- pvar1+VarCorr(glmm_sn_tc)$Subject[1]  ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
     newdat
-    , plo = newdat$weight.seed.log2-cmult*sqrt(pvar1)
-    , phi = newdat$weight.seed.log2+cmult*sqrt(pvar1)
+    , plo = newdat$seeds_number.inf-cmult*sqrt(pvar1)
+    , phi = newdat$seeds_number.inf+cmult*sqrt(pvar1)
  #   , tlo = newdat$LDMC-cmult*sqrt(tvar1)
   #  , thi = newdat$LDMC+cmult*sqrt(tvar1)
 )
+
+
+newdat<-newdat %>% transform(seeds_number.inf=exp(seeds_number.inf),plo=exp(plo),phi=exp(phi))
+
 #plot confidence
-g0_wps <- ggplot(newdat, aes(x=treat2.y, y=weight.seed.log2, colour=temperature)) +
+g0_sn <- ggplot(newdat, aes(x=treat2.y, y=seeds_number.inf, colour=temperature)) +
   geom_path(aes(group = temperature, color = temperature),linewidth=0.75,position = position_dodge(width = 0.15))+
   geom_pointrange(aes(ymin = plo, ymax = phi),position = position_dodge(width = 0.15), linewidth=0.75, size=1)+
   xlab("Competition")+
-  ylab("log(seed weight)")
+  ylab("seed number")
 
-g0_wps<-ggdraw(add_sub(g0_wps, "   Competition:NS Site:** Temperature:NS"))
-g0_wps
+g0_sn<-ggdraw(add_sub(g0_sn, "   Competition:NS Site:NS Temperature:NS"))
+g0_sn
 ```
 
 combined <- p1 + p2 & theme(legend.position = "bottom")
