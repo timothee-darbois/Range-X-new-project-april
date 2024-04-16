@@ -1,0 +1,193 @@
+---
+title: "species analysis"
+author: "Timothée Darbois"
+date: "2024-04-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ade4)
+library(ggplot2)
+library(tidyverse)
+library(googlesheets4)
+library(dplyr)
+library(rstatix)
+library(readxl)
+library(Factoshiny)
+library(vegan)
+library(missMDA)
+library(ggvegan)
+library(ggordiplots)
+library(GGally)
+library(patchwork)
+library(jtools)
+library(lme4)
+library(interactions)
+library(multcomp)
+library(effects)
+library(ggeffects)
+
+
+```
+
+```{r}
+df_Tim<-read.csv('D:/mes_documents/M1/stage/data/csv/rangeX seeds even number (2).xlsx - Feuille 1.csv',dec=",", na.strings = c("#DIV/0!"))
+
+df_Tim<-as.data.frame(df_Tim)
+df_Tim<- df_Tim %>% mutate(student='Timothée')
+
+df_Tim<-df_Tim %>% mutate(condi=paste(df_Tim$site,df_Tim$plotID,sep=","))
+
+```
+
+```{r}
+df_Ingrid<-read.csv('D:/mes_documents/M1/stage/data/csv/Copie de Seeds rangeX Timothée - Seeds odd numbers.csv', dec=",", na.strings = c("#DIV/0!"))
+df_Ingrid<-as.data.frame(df_Ingrid)
+df_Ingrid<- df_Ingrid %>% mutate(student='Ingrid')
+
+
+```
+  
+
+```{r}
+df1<-df_Tim%>% dplyr::select(1,2,3,4,5,6,7,8,9,10,11,12,13,"student")
+df2<-df_Ingrid%>% dplyr::select(1,2,3,4,5,6,7,8,9,10,11,12,13,"student")
+df<-rbind(df1,df2)
+
+df<-df %>% mutate(seeds_number.inf=as.integer(seeds_number.inf))
+
+df<-df%>%
+  filter(!is.na(weight.inf))
+
+df<-df %>% mutate(condi=paste(df$site,df$plotID,sep=","))
+
+df<-df %>% mutate(merge_ID=paste(df$site,df$blockID,df$plotID,df$positionID_clean, sep=" "))
+
+```
+
+removing na from the column seed weight, and preparing columnb for log ( adding small constant to avoid 0)
+```{r}
+df$weight.seed[is.na(df$weight.seed)]<-0
+c<-which(df$weight.inf!= 0)
+c1<-min(df$weight.inf[c])/100
+
+c<-which(df$weight.seed!= 0)
+c2<-min(df$weight.seed[c])/100
+
+df<-data.frame(df,weight.inf.log=df$weight.inf+c1,weight.seed.log=df$weight.seed+c2)
+```
+
+```{r}
+df<-data.frame(df,temperature=paste(df$treat1,df$site))
+df$temperature<-str_replace(df$temperature,"LS","ambient LS")
+```
+
+```{r}
+demo_trait_high<-read_excel(path="C:/Users/timot/Documents/M1/stage/data_analysis/data/RangeX_raw_demographic_traits_high_2023.xlsx",sheet=2)
+demo_trait_low<-read_excel(path="C:/Users/timot/Documents/M1/stage/data_analysis/data/RangeX_raw_demographic_traits_low_2023.xlsx",sheet=2)
+func_trait<-read_excel(path="C:/Users/timot/Documents/M1/stage/data_analysis/data/RangeX_raw_functional_traits_2023.xlsx",sheet=2)
+
+```
+
+```{r}
+demo_trait_high<-demo_trait_high %>% mutate(site= rep("HS",nrow(demo_trait_high)))
+demo_trait_low<-demo_trait_low %>% mutate( site= rep("LS",nrow(demo_trait_low)))
+demo_trait<-rbind(demo_trait_high,demo_trait_low)
+
+demo_trait<-demo_trait %>% mutate(merge_ID=paste(demo_trait$site,demo_trait$block,str_to_upper (demo_trait$treat),demo_trait$coord, sep=" "))
+
+
+func_trait<-func_trait %>% mutate(merge_ID=paste(func_trait$site,func_trait$blockID,func_trait$plotID,func_trait$positionID, sep=" "))
+
+# thickness was measured three times, for more precision
+func_trait<-func_trait %>% mutate(thickness=rowMeans(data.frame(func_trait$thickness_1,func_trait$thickness_2,func_trait$thickness_3),na.rm=TRUE))
+
+
+#converting into numeric the flowers data
+demo_trait<-demo_trait %>% mutate(no_flowers_col1= as.numeric(  no_flowers_col1)  ,no_flowers_col10= as.numeric (
+ no_flowers_col10) , no_flowers_col2= as.numeric ( no_flowers_col2), 
+no_flowers_col3= as.numeric ( no_flowers_col3), no_flowers_col4= as.numeric ( no_flowers_col4), no_flowers_col5= as.numeric (no_flowers_col5),
+ no_flowers_col6= as.numeric (no_flowers_col6), no_flowers_col7= as.numeric ( no_flowers_col7),no_flowers_col8= as.numeric (no_flowers_col8), no_flowers_col9= as.numeric ( no_flowers_col9),no_flowers_col9= as.numeric(no_flowers_col9), no_flowers_col11= as.numeric(no_flowers_col11), no_flowers_col12= as.numeric(no_flowers_col12), no_flowers_col13= as.numeric (no_flowers_col13) ,no_flowers_col14= as.numeric ( no_flowers_col14), no_flowers_col15= as.numeric (no_flowers_col15) ,no_flowers_col16= as.numeric (no_flowers_col16) ,no_flowers_col17= as.numeric (no_flowers_col17), no_flowers_col18= as.numeric (no_flowers_col18) ,no_flowers_col19= as.numeric (no_flowers_col19) ,no_flowers_col20= as.numeric (no_flowers_col20), no_flowers_col21= as.numeric (no_flowers_col21) ,no_flowers_col22= as.numeric (no_flowers_col22) ,no_flowers_col23= as.numeric (no_flowers_col23),no_flowers_col24= as.numeric ( no_flowers_col24), no_flowers_col25= as.numeric (no_flowers_col25) ,no_flowers_col26= as.numeric (no_flowers_col26),no_flowers_col27= as.numeric ( no_flowers_col27) ,no_flowers_col28= as.numeric (no_flowers_col28),no_flowers_col29= as.numeric (no_flowers_col29), no_flowers_col30= as.numeric (no_flowers_col30) ,no_flowers_col31= as.numeric (no_flowers_col31) ,no_flowers_col32= as.numeric ( no_flowers_col32), no_flowers_col33= as.numeric ( no_flowers_col33) ,no_flowers_col34= as.numeric (no_flowers_col34) ,no_flowers_col35= as.numeric ( no_flowers_col35), no_flowers_col36= as.numeric ( no_flowers_col36) ,no_flowers_col37= as.numeric (no_flowers_col37) ,no_flowers_col38= as.numeric ( no_flowers_col38), no_flowers_col39= as.numeric ( no_flowers_col39) ,no_flowers_col40= as.numeric (no_flowers_col40) ,no_flowers_col41= as.numeric ( no_flowers_col41), no_flowers_col42= as.numeric (no_flowers_col42) ,no_flowers_col43= as.numeric (no_flowers_col43) ,no_flowers_col44= as.numeric ( no_flowers_col44), no_flowers_col45= as.numeric ( no_flowers_col45) ,no_flowers_col46= as.numeric (no_flowers_col46) ,no_flowers_col47= as.numeric ( no_flowers_col47))
+
+#computing the total number of flowers per individual
+demo_trait<-demo_trait %>% 
+  rowwise %>% 
+  mutate(no_flowers_tt=sum(c_across(c("no_flowers_col1","no_flowers_col10","no_flowers_col2","no_flowers_col3","no_flowers_col4","no_flowers_col5","no_flowers_col6","no_flowers_col7","no_flowers_col8","no_flowers_col9","no_flowers_col9","no_flowers_col11","no_flowers_col12","no_flowers_col13","no_flowers_col14","no_flowers_col15","no_flowers_col16","no_flowers_col17","no_flowers_col18","no_flowers_col19","no_flowers_col20","no_flowers_col21","no_flowers_col22","no_flowers_col23","no_flowers_col24","no_flowers_col25","no_flowers_col26","no_flowers_col27","no_flowers_col28","no_flowers_col29","no_flowers_col30","no_flowers_col31","no_flowers_col32","no_flowers_col33","no_flowers_col34","no_flowers_col35","no_flowers_col36","no_flowers_col37","no_flowers_col38","no_flowers_col39","no_flowers_col40","no_flowers_col41","no_flowers_col42","no_flowers_col43","no_flowers_col44","no_flowers_col45","no_flowers_col46","no_flowers_col47")),na.rm=TRUE))
+
+func_trait$bulknr[is.na(func_trait$bulknr)]<-1
+func_trait<-transform(func_trait, dry_mass = `dry_mass`/`bulknr`) 
+func_trait<-transform(func_trait, wet_mass = `wet_mass`/`bulknr`) # number of leaves taken into account ) bulknr ( sometimes 2), so transformation to have the mass/ leaf
+
+#sampled quarter = sometimes only 1/4 of the individual is measured. to have an approximation of measurments / indiv, we have to multiply everything by 4 when sampled_quarted="yes"
+demo_trait$sampled_quarter<-as.numeric(sub("yes",4,demo_trait$sampled_quarter))
+demo_trait$sampled_quarter[is.na(demo_trait$sampled_quarter)]<-1
+demo_trait<-transform(demo_trait, no_leaves = `no_leaves`*`sampled_quarter`)
+
+all_trait<-merge(func_trait,demo_trait,by="merge_ID")
+all_trait<-merge(all_trait,df,by="merge_ID")
+
+```
+
+sélection des colones que l'on conserve pour la RDA
+```{r}
+all_trait_pca<-all_trait[all_trait$species %in% c("CN","SP","TP","PS","PL","LM","LV"), ]
+
+for (i in 1:47){
+  column=paste("no_flowers_col",i,sep="")
+  all_trait_pca[,column]<-NULL
+}
+all_trait_pca$date.x<-NULL
+all_trait_pca$ID.x<-NULL
+all_trait_pca$site.x<-NULL
+all_trait_pca$species.x<-NULL
+all_trait_pca$treat1.x<-NULL
+all_trait_pca$treat2.x<-NULL
+all_trait_pca$blockID.x<-NULL
+all_trait_pca$plotID.x<-NULL
+all_trait_pca$positionID.x<-NULL
+all_trait_pca$thickness_1<-NULL
+all_trait_pca$thickness_2<-NULL
+all_trait_pca$thickness_3<-NULL
+
+```
+select(-c(var1,var2,...))
+
+# trait value
+```{r}
+select_species=c("cennig","sucpra","tripra","pimsax","plalan","luzmul","leuvul") # with enough counts
+ll_per_sp<-c()
+for (i in select_species){
+  df_sp<-demo_trait[demo_trait$species==i,]
+  ll_per_sp<-c(ll_per_sp,mean(df_sp$leaf_length_mm,na.rm=TRUE))}
+
+ggplot(data=data.frame(leaf_length=ll_per_sp,species=select_species),aes(x=species,y=leaf_length)) +geom_bar(stat="identity") + ggtitle("leaf length per species")
+
+  
+```
+```{r}
+select_species=c("cennig","sucpra","tripra","pimsax","plalan","luzmul","leuvul") # with enough counts
+vegh_per_sp<-c()
+for (i in select_species){
+  df_sp<-demo_trait[demo_trait$species==i,]
+  vegh_per_sp<-c(vegh_per_sp,mean(df_sp$height_veg_cm,na.rm=TRUE))}
+
+ggplot(data=data.frame(vegetative_height=vegh_per_sp,species=select_species),aes(x=species,y=vegetative_height)) +geom_bar(stat="identity") + ggtitle("leaf length per species")
+
+  
+```
+```{r}
+select_species=c("cennig","sucpra","tripra","pimsax","plalan","luzmul","leuvul") # with enough counts
+reph_per_sp<-c()
+for (i in select_species){
+  df_sp<-demo_trait[demo_trait$species==i,]
+  reph_per_sp<-c(reph_per_sp,mean(df_sp$height_rep_cm,na.rm=TRUE))}
+
+ggplot(data=data.frame(reproductive_height=reph_per_sp,species=select_species),aes(x=species,y=reproductive_height)) +geom_bar(stat="identity") + ggtitle("mean reproductive height per species")
+
+  
+```
