@@ -458,9 +458,9 @@ sjPlot::plot_model(glmm_nol4, show.values = TRUE, width = 0.1, title = "effect o
 ```
 ## interactions
 ```{r}
-glmm_nol_sc<- lmer(no_leaves~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nol_sc<- glmer.nb(no_leaves~site*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
-glmm_nol_tc<- lmer(no_leaves~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_nol_tc<- glmer.nb(no_leaves~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
 
 sjPlot::tab_model(glmm_nol_sc,show.intercept = T)
