@@ -31,6 +31,7 @@ library(interactions)
 library(multcomp)
 library(effects)
 library(ggeffects)
+library(performance)
 
 
 ```
