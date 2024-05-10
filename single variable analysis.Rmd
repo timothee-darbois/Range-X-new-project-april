@@ -40,6 +40,7 @@ library(cowplot)
 
 
 ```
+
 ```{r}
 df_Tim<-read.csv('D:/mes_documents/M1/stage/data/csv/rangeX seeds even number (2).xlsx - Feuille 1.csv',dec=",", na.strings = c("#DIV/0!"))
 
@@ -77,10 +78,10 @@ removing na from the column seed weight, and preparing columnb for log ( adding 
 ```{r}
 df$weight.seed[is.na(df$weight.seed)]<-0
 c<-which(df$weight.inf!= 0)
-c1<-min(df$weight.inf[c])/100
+c1<-min(df$weight.inf[c])/2
 
 c<-which(df$weight.seed!= 0)
-c2<-min(df$weight.seed[c])/100
+c2<-min(df$weight.seed[c])/2
 
 df<-data.frame(df,weight.inf.log=df$weight.inf+c1,weight.seed.log=df$weight.seed+c2)
 ```
@@ -140,7 +141,7 @@ all_trait<-merge(all_trait,df,by="merge_ID")
 ```
 
 ```{r}
-all_trait_pca<-all_trait[all_trait$species %in% c("CN","SP","TP","PS","PL","LM","LV"), ]
+all_trait_pca<-all_trait[all_trait$species %in% c("CN","SP","TP","PS","PL","LM","LV","CC"), ]
 
 for (i in 1:47){
   column=paste("no_flowers_col",i,sep="")
@@ -281,6 +282,8 @@ plot_final
 ```
 
 ##final graph with confidence interval
+code adapted from
+https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#predictions-andor-confidence-or-prediction-intervals-on-predictions
 
 ```{r}
 newdat <- expand.grid(
@@ -846,7 +849,7 @@ b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_ll1))
+CI<-coef(summary(glmm_lt1))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
@@ -957,7 +960,7 @@ b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_ll1))
+CI<-coef(summary(glmm_lw1))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
@@ -1068,7 +1071,7 @@ b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_ll1))
+CI<-coef(summary(glmm_nrs1))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
@@ -1182,7 +1185,7 @@ b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_ll1))
+CI<-coef(summary(glmm_dm1))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
@@ -1295,7 +1298,7 @@ b<-append(b[,][-1],0)
 rname<-append(rname,"HS A")
 
 #confidence interval
-CI<-coef(summary(glmm_ll1))
+CI<-coef(summary(glmm_ldmc1))
 CI_HSA<-CI[,"Std. Error"][1]/a[1] #à vérifier
 CI<-as.data.frame(append(CI[,"Std. Error"][-1],CI_HSA))[,]
 
@@ -1386,6 +1389,10 @@ all_trait_pca<-all_trait_pca %>% mutate(weight.seed.log2=log(weight.seed.log))
 
 
 glmm_wps_tc<- lmer(weight.seed.log2~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+glmm_wps3<- lmer(weight.seed.log2~temperature + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+summary(glmm_wps3)
 
 ```
 #final graph with confidence interval
