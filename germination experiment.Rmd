@@ -22,9 +22,17 @@ library(sjPlot)
 library(conflicted)
 library(DHARMa)
 library(actuaRE)
+library(ggeffects)
 # conflict_prefer_all(lmerTest, quiet = TRUE) doesn't work
 # conflict_prefer_all(dplyr, quiet = TRUE) same
 ```
+function: 
+```{r}
+logistic_func=function(x){
+  return ( exp(x) * ( 1 + exp(x) ) )
+}
+```
+
 
 ```{r}
 df_Ingrid_germ <- read.csv("D:/mes_documents/M1/stage/data/csv/Copie de RangeX germination+viability (odd) - Ark 1.csv", dec = ",", na.strings = c("#DIV/0!"))
@@ -32,29 +40,106 @@ df_Ingrid_germ[, "Total.germinated"] <- NULL
 df_Ingrid_germ[, "Germination.rate.in.percentage"] <- NULL
 ```
 
+data timothée
+
+delete initial_nb_seeds_1 = NA
+delete batch=2 : uncomplete
+
+```{r}
+df_tim_germ<- read.csv("D:/mes_documents/M1/stage/data/csv/Copie de RangeX even number germination experiment - Feuille 1.csv", dec = ",", na.strings = c("#DIV/0!"))
+df_tim_germ<-df_tim_germ[which(!is.na(df_tim_germ["Number.of.seeds.for.germination"])),]
+df_tim_germ<-df_tim_germ[which((df_tim_germ["Batch"]==1)),]
+df_tim_germ$Day.1 <- NULL # didn't do measurement this day
+
+
+```
+
 
 
 ```{r}
 df_germination <- df_Ingrid_germ # add my data afterwords
+
+df_germination <- df_germination %>%
+  mutate(nb_replicate = sub("^$", "1", gsub("\\D+", "", str_sub(df_germination$positionID, 3, 5)))) # add a column with the replicate ID ( 1 to 3)
 df_germination <- df_germination %>%
   mutate(
     condi = paste(df_germination$site, df_germination$plotID, sep = " "),
     positionID_clean = str_sub(df_germination$positionID, , 2) # withdraw the number of the replicate that is written in the same column
   )
-df_germination <- df_germination %>%
-  mutate(nb_replicate = sub("^$", "1", gsub("\\D+", "", str_sub(df_germination$positionID, 3, 5)))) # add a column with the replicate ID ( 1 to 3)
 
+```
+
+merging Ingrid and my df : to continue
+
+```{r}
+col_df_germ=c("site","species","treat1","treat2","blockID","plotID","positionID_clean","nb_replicate","Number.of.seeds.for.germination","Day.0","Day.2","Day.4","Day.6","Day.8","Day.12","Day.16","Day.24","Day.32","Viability.test..number.tested","Viable.seeds")
+
+df_germination<-rbind(df_germination[col_df_germ] , df_tim_germ[col_df_germ])
+```
+
+
+```{r}
+df_germination<-df_germination[df_germination$species %in% c("CN","SP","TP","PS","PL","LM","LV","CC"), ]
 
 df_germination <- df_germination %>%
   mutate(merge_ID = paste(site, blockID, plotID, positionID_clean, sep = " "))
+
+df_germination <- df_germination %>%
+  mutate(
+    condi = paste(df_germination$site, df_germination$plotID, sep = " "))
+
+```
+
+```{r}
+df_germination <- df_germination %>% mutate(competition = df_germination$treat2)
+
+df_germination <- df_germination %>% mutate(temperature = paste(df_germination$site, df_germination$treat1))
+
+df_germination$temperature <- str_replace(df_germination$temperature, "LS ", "ambient LS")
+df_germination$temperature <- str_replace(df_germination$temperature, "HS ambient", "ambient HS")
+df_germination$temperature <- str_replace(df_germination$temperature, "HS warm", "warm HS") # that it match the format of the other file : single variable analysis
+
+
+df_germination$temperature <- relevel(as.factor(df_germination$temperature), "ambient HS")
+```
+```{r}
+df_germination <- df_germination %>%
+  mutate(total_germinated = rowSums(df_germination[c("Day.0", "Day.2", "Day.4", "Day.6", "Day.8", "Day.12", "Day.16", "Day.24", "Day.32")], na.rm = TRUE))
+#have to stop the mutate chaine: I will use total germinated
+
+```
+
+conversion for calculation later
+```{r}
+df_germination$Viability.test..number.tested<-as.numeric(df_germination[,"Viability.test..number.tested"])
+
+df_germination$Viable.seeds<-as.numeric(df_germination[,"Viable.seeds"])
 ```
 
 to deal with the flowers replicate per individual : do another data frame where you will do the mean of the replicates. in this table you will have the final germination percentages, T50%, ...
 ```{r}
 df_percentage <- df_germination[!duplicated(df_germination$merge_ID), ] # ok : some replicate number are still != from 1, but that is because the replicate 2 was before the number 1. we have only 1 row per individual.
+```
 
+#calculating germination percentage
+```{r}
+df_percentage <- df_percentage %>% 
+ mutate(germination_percentage = 100 * df_percentage$total_germinated  /    df_percentage$Number.of.seeds.for.germination)
+
+
+
+```
+
+```{r}
 # replicate
 replicate <- row.names(df_germination[duplicated(df_germination$merge_ID), ])
+
+
+                                          
+
+
+df_percentage <- df_percentage %>% mutate(percent_germinated_and_viable = 100 * df_percentage$total_germinated / df_percentage$Number.of.seeds.for.germination) #initialisation
+
 for (i in replicate) {
   merge_ID_rep <- df_germination[i, "merge_ID"]
 
@@ -69,35 +154,44 @@ for (i in replicate) {
   df_percentage[df_percentage$merge_ID == merge_ID_rep, "Viability.test..number.tested"] <- colSums(df_rep["Viability.test..number.tested"], na.rm = TRUE) / sum(!is.na(df_rep["Viability.test..number.tested"]))
 
   df_percentage[df_percentage$merge_ID == merge_ID_rep, "Viable.seeds"] <- colSums(df_rep["Viable.seeds"], na.rm = TRUE) / sum(!is.na(df_rep["Viable.seeds"]))
+  
 
   df_percentage[df_percentage$merge_ID == merge_ID_rep, "Number.of.seeds.for.germination"] <- colSums(df_rep["Number.of.seeds.for.germination"], na.rm = TRUE) / sum(!is.na(df_rep["Number.of.seeds.for.germination"]))
+  
+  df_percentage[df_percentage$merge_ID == merge_ID_rep, "percent_germinated_and_viable"] 
+  
+  germinated_viable<- sum(rowSums(df_rep[c("total_germinated", "Viable.seeds")], na.rm = TRUE),na.rm=TRUE)/ max(sum(!is.na(df_rep["total_germinated"])),sum(!is.na(df_rep["Viable.seeds"])))
+  
+  to_chose<-rowSums(df_rep[c("total_germinated", "Viable.seeds")],na.rm=TRUE)
+  nb_germination_2<- sum(df_rep[which(!is.na(to_chose)),"Number.of.seeds.for.germination"],na.rm=TRUE) /sum(!is.na(to_chose)) 
+
+    df_percentage[df_percentage$merge_ID == merge_ID_rep, "percent_germinated_and_viable"] <-100*germinated_viable/nb_germination_2 #WORKS!
+                                                                                                            
 }
 # this time it seems ok, (some NA: sometimes everything germinated, so no test; other simply not tested. sum of na value : 18/225 : negligeable)
 ```
+germination percentage= mean of germination percentage of all the replicate.
+ percentage of germinated and viable seeds= this percentage for only 1 replicate per individual, as we have only 1 viability test per individual.
 
-#calculating germination percentage
+now we can update germination percentage and total germinated with the updapted germination records
 ```{r}
 df_percentage <- df_percentage %>%
   mutate(total_germinated = rowSums(df_percentage[c("Day.0", "Day.2", "Day.4", "Day.6", "Day.8", "Day.12", "Day.16", "Day.24", "Day.32")], na.rm = TRUE))
-#have to stop the mutate chaine: I will use total germinated
 
 df_percentage <- df_percentage %>% 
- mutate(germination_percentage = 100 * df_percentage$total_germinated  /    df_percentage$Number.of.seeds.for.germination)  %>% 
-
-  mutate(germinated_and_viable = rowSums(df_percentage[c("total_germinated", "Viable.seeds")], na.rm = TRUE)) ## only 1 of 3 individual were tested: if no test, don't make the sum
-
-df_percentage <- df_percentage %>% mutate(percent_germinated_and_viable = 100 * df_percentage$germinated_and_viable / df_percentage$Number.of.seeds.for.germination)
+ mutate(germination_percentage = 100 * df_percentage$total_germinated  /    df_percentage$Number.of.seeds.for.germination)
 ```
 
 
+!! we do not include the seeds that germinated before the beginning of the experiment, ie in the incubator
 ```{r}
 my_t50 <- c()
 
 for (i in row.names(df_percentage)) {
-  my_t50 <- c(my_t50, df_percentage[i, c("Day.0", "Day.2", "Day.4", "Day.6", "Day.8", "Day.12", "Day.16", "Day.24", "Day.32")] %>%
+  my_t50 <- c(my_t50, df_percentage[i,c( "Day.2", "Day.4", "Day.6", "Day.8", "Day.12", "Day.16", "Day.24", "Day.32")] %>%
     replace(is.na(.), 0) %>%
     as.numeric() %>%
-    t50(intervals = c(0, 2, 4, 6, 8, 12, 16, 24, 32), method = c("farooq"))) # calcule T50 : when there is missing value in the table, mean =0
+    t50(intervals = c(2, 4, 6, 8, 12, 16, 24, 32), method = c("farooq"))) # calcule T50 : when there is missing value in the table, mean =0
 }
 
 df_percentage <- df_percentage %>% mutate(t50 = my_t50 %>% replace(is.na(.), 0)) # row with only na have a t50 of na : meaning 0
@@ -108,22 +202,7 @@ df_percentage <- df_percentage %>% mutate(t50 = my_t50 %>% replace(is.na(.), 0))
  
 
 #analyses:
-as my second batch will not be ready on time for the report: don't integrate the germination data with all_trait_pca for single variable analysis: do it with df_percentage. 
-just integtrate the 
-
-creating the variable for the glmm: temperature(3 levels: ambient HS, ambient LS and warm HS) and competition( bare, vege)
-```{r}
-df_percentage <- df_percentage %>% mutate(competition = df_percentage$treat2)
-
-df_percentage <- df_percentage %>% mutate(temperature = paste(df_percentage$site, df_percentage$treat1))
-
-df_percentage$temperature <- str_replace(df_percentage$temperature, "LS ", "ambient LS")
-df_percentage$temperature <- str_replace(df_percentage$temperature, "HS ambient", "ambient HS")
-df_percentage$temperature <- str_replace(df_percentage$temperature, "HS warm", "warm HS") # that it match the format of the other file : single variable analysis
-
-
-df_percentage$temperature <- relevel(as.factor(df_percentage$temperature), "ambient HS")
-```
+as my second batch will not be ready on time for the report: don't integrate the germination data with all_trait_pca for single variable analysis: do it with df_percentage.
 ## germination percentage
 ### boxplot
 ```{r}
@@ -161,7 +240,7 @@ sjPlot::plot_model(glmm_gp1, show.values = TRUE, width = 0.1, title = "effect of
 
 
 sjPlot::tab_model(glmm_gp2, show.intercept = T)
-sjPlot::plot_model(glmm_gp2, show.values = TRUE, width = 0.1, title = "effect of transplantation on dry  mass")
+sjPlot::plot_model(glmm_gp2, show.values = TRUE, width = 0.1, title = "effect of transplantation on germination  percentage")
 
 sjPlot::tab_model(glmm_gp3, show.intercept = T)
 sjPlot::plot_model(glmm_gp3, show.values = TRUE, width = 0.1, title = "effect of warming on germination percentage")
@@ -189,13 +268,14 @@ plot(check_glmm_test)
 ```
 ```{r}
 plotSimulatedResiduals(glmm_gp1)
+DHARMa::plotSimulatedResiduals (glmm_gp1)
 ```
 
 dharma: cope with non normal distribution : it's another function. 
 
 ### final graph
 ```{r}
-a <- fixef(glmm_gp1)
+a <- lme4::fixef(glmm_gp1)
 b <- as.data.frame(a)
 rname <- gsub("condi", "", row.names(b)[-1])
 b <- append(b[, ][-1], 0)
@@ -233,7 +313,7 @@ newdat$germination_percentage <- predict(glmm_gp_tc, newdat, re.form = NA)
 mm <- model.matrix(terms(glmm_gp_tc), newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_gp_tc), mm))
-tvar1 <- pvar1 + VarCorr(glmm_gp_tc)$Subject[1] ## must be adapted for more complex models
+tvar1 <- pvar1 + lme4::VarCorr(glmm_gp_tc)$Subject[1] ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
   newdat,
@@ -253,11 +333,46 @@ g0_gp <- ggdraw(add_sub(g0_gp, "Competition:NS Site:NS Temperature: NS"))
 g0_gp
 ```
 
+```{r}
+pred_gp2<-ggpredict(glmm_gp_tc,terms=c("competition", "temperature"))
+g0_gp2<-plot(pred_gp2) + ggtitle(" ") + geom_line(position = position_dodge(width = 0.25)) + geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) 
+g0_gp2<-ggdraw(add_sub(g0_gp2, "Competition:NS Site:* Temperature: NS",size=11,y=0.65))
+g0_gp2
+
+```
+
 
 ## t50
 ### boxplot
+
+creating the dataset from df_percentage. in some sample, no seeds germinated, the result of the formula is 0, whereas it should be NA : we will delete these rows
+
+ sometimes, more than half of the seeds germinated before day 2: 12,7% of the individual, this is too much, we can't use the data I think
+
 ```{r}
-boxplot_sp_t50 <- ggplot(df_percentage, aes(x = condi, y = t50)) +
+df_t50<-df_percentage
+delete<-df_t50[which(df_t50$total_germinated==0),]
+df_t50<-df_percentage[!rownames(df_percentage) %in% row.names(delete),]
+
+delete<-df_t50[which(df_t50$total_germinated-df_t50$Day.0==0)
+,]
+df_t50<-df_t50[!rownames(df_t50) %in% row.names(delete),]
+
+
+
+```
+
+```{r}
+length(which(df_t50$t50==0))/nrow(df_t50)
+```
+test:
+```{r}
+df_t50<-df_t50[which(df_t50$t50!=0),]
+```
+
+
+```{r}
+boxplot_sp_t50 <- ggplot(df_t50, aes(x = condi, y = t50)) +
   geom_violin(aes(fill = condi)) +
   facet_wrap(vars(species), nrow = 2, scales = "free") +
   stat_summary(fun.data = "mean_cl_boot", geom = "pointrange", size = 0.2, colour = "red") +
@@ -265,7 +380,7 @@ boxplot_sp_t50 <- ggplot(df_percentage, aes(x = condi, y = t50)) +
 
 boxplot_sp_t50
 
-boxplot_t50 <- ggplot(df_percentage, aes(x = condi, y = t50)) +
+boxplot_t50 <- ggplot(df_t50, aes(x = condi, y = t50)) +
   geom_violin(aes(fill = condi)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "pointrange", colour = "red") +
   ggtitle("t50")
@@ -276,19 +391,19 @@ boxplot_t50
 makes sense that nbothing is significant
 ### glmm 
 ```{r}
-c <- min(df_percentage[which(df_percentage$t50 != 0), ]$t50) / 2
-df_percentage <- df_percentage %>% mutate(t50_log = log(df_percentage$t50 + c))
+c <- min(df_t50[which(df_t50$t50 != 0), ]$t50) / 2
+df_t50 <- df_t50 %>% mutate(t50_log = log(df_t50$t50 + c))
 
-glmm_t501 <- lme4::lmer(t50 ~ condi + (1 | blockID) + (1 | species), data = df_percentage)
-glmm_t501_log <- lme4::lmer(t50_log ~ condi + (1 | blockID) + (1 | species), data = df_percentage)
-
-
-glmm_t502 <- lme4::lmer(t50 ~ site + (1 | blockID) + (1 | species), data = df_percentage)
-
-glmm_t503 <- lme4::lmer(t50 ~ temperature + (1 | blockID) + (1 | species), data = df_percentage)
+glmm_t501 <- lme4::lmer(t50 ~ condi + (1 | blockID) + (1 | species), data = df_t50)
+glmm_t501_log <- lme4::lmer(t50_log ~ condi + (1 | blockID) + (1 | species), data = df_t50)
 
 
-glmm_t504 <- lme4::lmer(t50 ~ competition + (1 | blockID) + (1 | species), data = df_percentage)
+glmm_t502 <- lme4::lmer(t50 ~ site + (1 | blockID) + (1 | species), data = df_t50)
+
+glmm_t503 <- lme4::lmer(t50 ~ temperature + (1 | blockID) + (1 | species), data = df_t50)
+
+
+glmm_t504 <- lme4::lmer(t50 ~ competition + (1 | blockID) + (1 | species), data = df_t50)
 
 
 sjPlot::tab_model(glmm_t501, show.intercept = T)
@@ -307,22 +422,30 @@ sjPlot::plot_model(glmm_t503, show.values = TRUE, width = 0.1, title = "effect o
 sjPlot::tab_model(glmm_t504, show.intercept = T)
 sjPlot::plot_model(glmm_t504, show.values = TRUE, width = 0.1, title = "effect of competition on t50")
 ```
+
+```{r}
+glmm_t50_gamma<- lme4::glmer(log(t50+1) ~ condi + (1 | blockID) + (1 | species), family = Gamma, data = df_t50)
+glmm_t50_gamma_log<- lme4::glmer(t50 ~ condi + (1 | blockID) + (1 | species), family = Gamma(link="log"), data = df_t50)
+sjPlot::tab_model(glmm_t50_gamma, show.intercept = T)
+sjPlot::plot_model(glmm_t50_gamma, show.values = TRUE, width = 0.1, title = "effect of transplantation on t50")
+```
+
 ### interactions
 ```{r}
-c <- min(df_percentage[which(df_percentage$t50 != 0), ]$t50) / 2
-df_percentage <- df_percentage %>% mutate(t50_log = log(df_percentage$t50 + c))
+c <- min(df_t50[which(df_t50$t50 != 0), ]$t50) / 2
+df_t50 <- df_t50 %>% mutate(t50_log = log(df_t50$t50 + c))
 
-glmm_t50_tc <- lme4::lmer(t50 ~ temperature * competition + (1 | blockID) + (1 | species), data = df_percentage)
+glmm_t50_tc <- lme4::lmer(t50 ~ temperature * competition + (1 | blockID) + (1 | species), data = df_t50)
 
-glmm_t50_log_tc <- lme4::lmer(t50_log ~ temperature * competition + (1 | blockID) + (1 | species), data = df_percentage)
+glmm_t50_log_tc <- lme4::lmer(t50_log ~ temperature * competition + (1 | blockID) + (1 | species), data = df_t50)
 
 
-sjPlot::tab_model(glmm_t50_tc, show.intercept = T)
+sjPlot::tab_model(glmm_t50_log_tc, show.intercept = T)
 sjPlot::plot_model(glmm_t50_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on t50")
 ```
 ### post hoc analysis
 ```{r}
-summary(glht(glmm_t501, mcp(condi = "Tukey")))
+summary(glht(glmm_t501_log, mcp(condi = "Tukey")))
 ```
 
 ### check model
@@ -336,15 +459,23 @@ I have a too small variance and a zero value inflation.
 check_glmm_test <- check_model(glmm_t501_log)
 plot(check_glmm_test)
 ```
-tweedieGLMM(
 ```{r}
-tweedieGLMM(t50 ~ condi + (1 | blockID) + (1 | species), data = df_percentage)
 
+check_glmm_test <- check_model(glmm_t50_gamma_log)
+plot(check_glmm_test)
 ```
+using the log or inverse link function doesn't change anything in terms of the quality of the qqplot
+
+on possibility to get ride of a gamma distribution with 0 value: tweedieGLMM
+
+
+tweedieGLMM(t50 ~ condi + (1 | blockID) + (1 | species), data = df_t50)
+
+=> we have to much value with more than half of the seeds that germinated before D2. should start the experiment ag
 
 ### final graph
 ```{r}
-a <- fixef(glmm_t501)
+a <- lme4::fixef(glmm_t501)
 b <- as.data.frame(a)
 rname <- gsub("condi", "", row.names(b)[-1])
 b <- append(b[, ][-1], 0)
@@ -379,7 +510,7 @@ newdat$t50 <- predict(glmm_t50_tc, newdat, re.form = NA)
 mm <- model.matrix(terms(glmm_t50_tc), newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_t50_tc), mm))
-tvar1 <- pvar1 + VarCorr(glmm_t50_tc)$Subject[1] ## must be adapted for more complex models
+tvar1 <- pvar1 + lme4::VarCorr(glmm_t50_tc)$Subject[1] ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
   newdat,
@@ -399,6 +530,8 @@ g0_t50 <- ggdraw(add_sub(g0_t50, "Competition:NS Site:NS Temperature: NS"))
 g0_t50
 ```
 
+
+
 ## viability percentage
 problem: i now have only 1 viability test per individual, not matching the replicate we have for germination we had before. we have to do a new data frame
 ```{r}
@@ -410,18 +543,6 @@ df_viability$Viable.seeds.percentage <- NULL
 df_viability <- df_viability %>% mutate(viability_percentage = 100 * df_viability$Viable.seeds / df_viability$Viability.test..number.tested) # working
 ```
 
-```{r}
-df_percentage <- df_percentage %>% mutate(competition = df_percentage$treat2)
-
-df_percentage <- df_percentage %>% mutate(temperature = paste(df_percentage$site, df_percentage$treat1))
-
-df_percentage$temperature <- str_replace(df_percentage$temperature, "LS ", "ambient LS")
-df_percentage$temperature <- str_replace(df_percentage$temperature, "HS ambient", "ambient HS")
-df_percentage$temperature <- str_replace(df_percentage$temperature, "HS warm", "warm HS") # that it match the format of the other file : single variable analysis
-
-
-df_percentage$temperature <- relevel(as.factor(df_percentage$temperature), "ambient HS")
-```
 
 ### boxplot
 ```{r}
@@ -447,16 +568,17 @@ makes sense that nbothing is significant
 c <- min(df_viability[which(df_viability$viability_percentage != 0), ]$viability_percentage) / 2
 df_viability <- df_viability %>% mutate(viability_percentage_log = log(df_viability$viability_percentage + c))
 
-glmm_vp1 <- lme4::lmer(viability_percentage ~ condi + (1 | blockID) + (1 | species), data = df_viability)
-glmm_vp1_log <- lme4::lmer(viability_percentage_log ~ condi + (1 | blockID) + (1 | species), data = df_viability)
+glmm_vp1 <- lme4::glmer(viability_percentage/100 ~ condi + (1 | blockID) + (1 | species), data = df_viability,family=binomial)
+
+glmm_vp1_log <- lme4::lmer(viability_percentage_log ~ condi + (1 | blockID) + (1 | species),data = df_viability)
 
 
-glmm_vp2 <- lme4::lmer(viability_percentage ~ site + (1 | blockID) + (1 | species), data = df_viability)
+glmm_vp2 <- lme4::glmer(viability_percentage/100 ~ site + (1 | blockID) + (1 | species), data = df_viability, family=binomial)
 
-glmm_vp3 <- lme4::lmer(viability_percentage ~ temperature + (1 | blockID) + (1 | species), data = df_viability)
+glmm_vp3 <- lme4::glmer(viability_percentage/100 ~ temperature + (1 | blockID) + (1 | species), data = df_viability,family=binomial)
 
 
-glmm_vp4 <- lme4::lmer(viability_percentage ~ competition + (1 | blockID) + (1 | species), data = df_viability)
+glmm_vp4 <- lme4::glmer(viability_percentage/100 ~ competition + (1 | blockID) + (1 | species), data = df_viability,family=binomial)
 
 
 sjPlot::tab_model(glmm_vp1, show.intercept = T)
@@ -480,9 +602,9 @@ sjPlot::plot_model(glmm_vp4, show.values = TRUE, width = 0.1, title = "effect of
 c <- min(df_viability[which(df_viability$viability_percentage != 0), ]$viability_percentage) / 2
 df_viability <- df_viability %>% mutate(viability_percentage_log = log(df_viability$viability_percentage + c))
 
-glmm_vp_tc <- lme4::lmer(viability_percentage ~ temperature * competition + (1 | blockID) + (1 | species), data = df_viability)
+glmm_vp_tc <- lme4::glmer(viability_percentage/100 ~ temperature * competition + (1 | blockID) + (1 | species), family=binomial, data = df_viability)
 
-glmm_vp_log_tc <- lme4::lmer(viability_percentage_log ~ temperature * competition + (1 | blockID) + (1 | species), data = )
+glmm_vp_log_tc <- lme4::lmer(viability_percentage_log ~ temperature * competition + (1 | blockID) + (1 | species), data =df_viability )
 
 
 sjPlot::tab_model(glmm_vp_tc, show.intercept = T)
@@ -498,15 +620,17 @@ summary(glht(glmm_vp1, mcp(condi = "Tukey")))
 check_glmm_test <- check_model(glmm_vp1)
 plot(check_glmm_test)
 ```
-I have a too small variance and an zero value inflation.
+
+much better than the gaussian
 ```{r}
-check_glmm_test <- check_model(glmm_vp1_log)
-plot(check_glmm_test)
+#check_glmm_test <- check_model(glmm_vp1_log)
+#plot(check_glmm_test)
+#no sense
 ```
 
 ### final graph
 ```{r}
-a <- fixef(glmm_vp1)
+a <- lme4::fixef(glmm_vp1)
 b <- as.data.frame(a)
 rname <- gsub("condi", "", row.names(b)[-1])
 b <- append(b[, ][-1], 0)
@@ -541,7 +665,7 @@ newdat$viability_percentage <- predict(glmm_vp_tc, newdat, re.form = NA)
 mm <- model.matrix(terms(glmm_vp_tc), newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_vp_tc), mm))
-tvar1 <- pvar1 + VarCorr(glmm_vp_tc)$Subject[1] ## must be adapted for more complex models
+tvar1 <- pvar1 + lme4::VarCorr(glmm_vp_tc)$Subject[1] ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
   newdat,
@@ -560,6 +684,151 @@ g0_vp <- ggdraw(add_sub(g0_vp, "Competition:NS Site:NS Temperature: NS"))
 
 g0_vp
 ```
+```{r}
+pred_vp2<-ggpredict(glmm_vp_tc,terms=c("competition", "temperature"))
+g0_vp2<-plot(pred_vp2) + ggtitle(" ") + geom_line(position = position_dodge(width = 0.25)) + geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) 
+g0_vp2<-ggdraw(add_sub(g0_vp2, "Competition:NS Site:NS Temperature: NS",size=11,y=0.65))
+g0_vp2
+
+```
+faire un dernier essai avec le pourcentage de graine viable initialement : somme de celle qui ont germé et qui on été testé viable
+
+filtrer germination en gardant ceux ou tt à germer, et en ajoutant ceux ou nombre de tester est différent de 0
+
+which(df_percentage$germinated_and_viable==0 & df_percentage$Viability.test..number.tested==0)
+-> named integer(0)
+so there is nothing to discard in df_percentage
+
+do the models
+## germination+ viable percentage
+### boxplot
+```{r}
+boxplot_sp_gvp <- ggplot(df_percentage, aes(x = condi, y = percent_germinated_and_viable)) +
+  geom_violin(aes(fill = condi)) +
+  facet_wrap(vars(species), nrow = 2, scales = "free") +
+  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange", size = 0.2, colour = "red") +
+  ggtitle("germination+viability percentage per species")
+
+boxplot_sp_gvp
+
+boxplot_gvp <- ggplot(df_percentage, aes(x = condi, y = percent_germinated_and_viable)) +
+  geom_violin(aes(fill = condi)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange", colour = "red") +
+  ggtitle("germination+viability percentage")
+
+boxplot_gvp
+```
+
+makes sense that nothing is significant
+### glmm 
+```{r}
+glmm_gvp1 <- glmer(percent_germinated_and_viable / 100 ~ condi + (1 | blockID) + (1 | species), data = df_percentage, family = binomial)
+
+glmm_gvp2 <- glmer(percent_germinated_and_viable / 100 ~ site + (1 | blockID) + (1 | species), data = df_percentage, family = binomial)
+
+glmm_gvp3 <- glmer(percent_germinated_and_viable / 100 ~ temperature + (1 | blockID) + (1 | species), data = df_percentage, family = binomial)
+
+
+glmm_gvp4 <- glmer(percent_germinated_and_viable / 100 ~ competition + (1 | blockID) + (1 | species), data = df_percentage, family = binomial)
+
+
+sjPlot::tab_model(glmm_gvp1, show.intercept = T)
+sjPlot::plot_model(glmm_gvp1, show.values = TRUE, width = 0.1, title = "effect of treatment on germination+viability percentage")
+
+
+sjPlot::tab_model(glmm_gvp2, show.intercept = T)
+sjPlot::plot_model(glmm_gvp2, show.values = TRUE, width = 0.1, title = "effect of transplantation on germination + viability percentage")
+
+sjPlot::tab_model(glmm_gvp3, show.intercept = T)
+sjPlot::plot_model(glmm_gvp3, show.values = TRUE, width = 0.1, title = "effect of warming on germination + viability percentage ")
+
+sjPlot::tab_model(glmm_gvp4, show.intercept = T)
+sjPlot::plot_model(glmm_gvp4, show.values = TRUE, width = 0.1, title = "effect of competition on germination+ viability percentage")
+```
+### interactions
+```{r}
+glmm_gvp_tc <- glmer(percent_germinated_and_viable / 100 ~ temperature * competition + (1 | blockID) + (1 | species), data = df_percentage, family = binomial)
+
+
+sjPlot::tab_model(glmm_gvp_tc, show.intercept = T)
+sjPlot::plot_model(glmm_gvp_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on germination+ viability percentage")
+```
+### post hoc analysis
+```{r}
+summary(glht(glmm_gvp1, mcp(condi = "Tukey")))
+```
+
+### check model
+```{r}
+check_glmm_test <- check_model(glmm_gvp1)
+plot(check_glmm_test)
+```
+```{r}
+plotSimulatedResiduals(glmm_gvp1)
+DHARMa::plotSimulatedResiduals (glmm_gvp1)
+```
+adapted from https://aosmith.rbind.io/2017/12/21/using-dharma-for-residual-checks-of-unsupported-models/#just-the-code-please
+```{r}
+
+sim_nbz = simulate(glmm_gvp1, nsim = 10)
+str(sim_nbz)
+
+sim_nbz = do.call(cbind, sim_nbz)
+head(sim_nbz)
+
+sim_res_nbz = createDHARMa(simulatedResponse = sim_nbz, 
+                           observedResponse = df_percentage$percent_germinated_and_viable / 100,
+                           fittedPredictedResponse = predict(glmm_gvp_tc),
+                           integerResponse = TRUE)
+plotSimulatedResiduals(sim_res_nbz)
+```
+bof: a vérifier
+dharma: cope with non normal distribution : it's another function. 
+
+### final graph
+```{r}
+a <- lme4::fixef(glmm_gvp1)
+b <- as.data.frame(a)
+rname <- gsub("condi", "", row.names(b)[-1])
+b <- append(b[, ][-1], 0)
+rname <- append(rname, "HS A")
+
+# confidence interval
+CI <- coef(summary(glmm_gvp1))
+CI_HSA <- CI[, "Std. Error"][1] / a[1] # à vérifier
+CI <- as.data.frame(append(CI[, "Std. Error"][-1], CI_HSA))[, ]
+
+df_plot <- data.frame(condi = rname, value = b)
+df_plot <- df_plot %>% mutate(competition = c("Vegetation", "Bare", "Bare", "Vegetation", "Bare", "Vegetation"), temperature = c("High ambient", "High warm", "High ambient", "Low ambient", "Low ambient", "High warm"), CI = CI)
+
+
+
+plot_final <- ggplot(df_plot, aes(x = competition, y = value, fill = temperature)) +
+  geom_dotplot(binaxis = "y", dotsize = 2) +
+  geom_path(aes(group = temperature, color = temperature)) +
+  ylab("value of glmm") +
+  ggtitle("Warming, transplantation and competition influence the germination percentage")
+plot_final
+```
+###final graph with confidence interval
+code adapted from 
+https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#predictions-andor-confidence-or-prediction-intervals-on-predictions
+
+we are using a logit link function, the inverese is the logistic
+logistic function= exp(x)*(1+exp(x))
+
+
+```{r}
+pred_gvp2<-ggpredict(glmm_gvp_tc,terms=c("competition", "temperature"))
+g0_gvp2<-plot(pred_gvp2) + ggtitle(" ") + geom_line(position = position_dodge(width = 0.25)) + geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) 
+
+ggdraw(add_sub(g0_gvp2, "Competition:NS Site:NS Temperature: NS"))
+```
+
+still not significant, we will see with my data
+
+
+what to do on thursday : see lab copy book
 
 
 t50()
