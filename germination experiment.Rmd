@@ -19,7 +19,6 @@ library(multcomp)
 library(performance)
 library(cowplot)
 library(sjPlot)
-library(conflicted)
 library(DHARMa)
 library(actuaRE)
 library(ggeffects)
@@ -335,7 +334,12 @@ g0_gp
 
 ```{r}
 pred_gp2<-ggpredict(glmm_gp_tc,terms=c("competition", "temperature"))
-g0_gp2<-plot(pred_gp2) + ggtitle(" ") + geom_line(position = position_dodge(width = 0.25)) + geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) 
+g0_gp2<-plot(pred_gp2) +
+  ggtitle(" ") +
+  geom_line(position = position_dodge(width = 0.25)) + 
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) +
+  theme(legend.position="none")+
+  ylab("germination percentage")
 g0_gp2<-ggdraw(add_sub(g0_gp2, "Competition:NS Site:* Temperature: NS",size=11,y=0.65))
 g0_gp2
 
