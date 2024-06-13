@@ -401,7 +401,7 @@ dimdesc(res.PCA,proba=0.8)
 
 
 
-```{r}
+
 #index_pca<-which(names(all_trait_pca)%in%c("merge_ID", "remark","block", "treat", "species.y", "coord", "herbivory_leaf" ,  "herbivory_flower", "nathan_old_new", "tillers_yes_no" ,"date.y","observer","scribe","comment", "site.y","ID.y", "date",  "site",  "condi", "treat1.y" ,"treat2.y","plotID.y" ,"positionID.y", "positionID_clean","student","temperature") )
 
 
@@ -411,11 +411,32 @@ plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
 plotellipses(res.PCA, keepvar=19,invisible=c('ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
 plotellipses(res.PCA, keepvar=19,invisible=c('ind','ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
 
-```
 
 ```{r}
 dimdesc(res.PCA,proba=0.8)
 ```
+
+```{r}
+index_species<-grep("species",colnames(all_trait_pca))[2]
+index_condi<-grep("condi",colnames(all_trait_pca))
+index_pca<-c(index_pca[! index_pca %in% index_species],index_condi)
+
+
+quali_sup=grep("species",colnames(all_trait_pca))
+res.PCA<-PCA(all_trait_pca[,-index_pca],quali.sup="species",graph=FALSE)
+
+plot.PCA(res.PCA,choix='var',habillage = 'contrib',select=c("contrib 16"),graph.type = "ggplot",ggoptions=c(size=4),autolab="y")
+plot.PCA(res.PCA,choix='var',habillage = 'contrib')
+plotellipses(res.PCA,keepvar="species",invisible=c('ind','ind.sup'),title="Graphe des individus de l'ACP",label =c('quali'))
+
+plotellipses(res.PCA, keepvar="species",invisible=c('ind.sup'),title="Graph of the individuals",label =c('quali'),graph.type = "ggplot",ggoptions=c(point.shape=20,size=5),xlim=c(-4,5),ylim=c(-4,3),autolab="y")
+
+plotellipses(res.PCA, keepvar="species",invisible=c('ind.sup'),title="Graph of the individuals",label =c('quali'))
+
+#point.shape=42
+dimdesc(res.PCA)
+```
+
 
 essaie pour mettre un autre moyen pour imputer les valeurs manquante
 
@@ -425,7 +446,7 @@ essaie pour mettre un autre moyen pour imputer les valeurs manquante
 RDA
 ```{r}
 #$completeObs
-column_pca<- c("wet_mass","dry_mass" ,"thickness", "veg_height",  "height_rep_strech_cm" , "repr_height" ,"height_veg_stretch_cm" ,"leaf_length","leaf_width_mm" ,"nb_leaves","nb_rep_stems","seeds_number.inf", "weight.inf"   ,"weight.seed", "no_flowers_tt", "germination_percentage", "germinated+viable"  )  
+column_pca<- c("wet_mass","dry_mass" ,"thickness", "veg_height",  "hrep_stretch" , "repr_height" ,"hveg_stretch" ,"leaf_length","leaf_width" ,"nb_leaves","nb_rep_stems","seeds_number.inf", "weight.inf"   ,"weight.seed", "nb_flowers", "germination_percentage", "germinated+viable"  )  
 
 test<-imputePCA(all_trait_pca[,column_pca],ncp=2)# pour remplacer les NA
 my_rda<-rda(test$completeObs~all_trait_pca$condi + Condition(all_trait_pca$species),scale=TRUE,center=TRUE,)
@@ -450,18 +471,19 @@ dudi.pca:
 
 acp_ade4<-dudi.pca(test,scale=F,scannf=F,nf=5)
 
-s.label(acp$li, xax = 1, yax = 2)
+s.label(acp_ade4$li, xax = 1, yax = 2)
 gcol <- c("red", "blue","yellow","purple","green","black", "blue3","blue4","brown1","brown3","brown4","grey","gold")
 
-s.class(dfxy = acp$li, fac = as.factor(all_trait_pca$condi), col = gcol, xax = 1, yax = 2)
-s.corcircle(acp$co,xax=1,yax=2)
+s.class(dfxy = acp_ade4$li, fac = as.factor(all_trait_pca$condi), col = gcol, xax = 1, yax = 2)
+s.corcircle(acp_ade4$co,xax=1,yax=2)
 
-s.label(acp$li, xax = 1, yax = 3)
-s.label(acp$li, xax = 2, yax = 3)
+s.label(acp_ade4$li, xax = 1, yax = 3)
+s.label(acp_ade4$li, xax = 2, yax = 3)
 
 
 
 ```
+
 ```{r}
 bca_condi=bca(acp_ade4,as.factor(all_trait_pca$condi),scannf=FALSE,nf=5)
 bca_condi$ratio
@@ -495,7 +517,7 @@ s.class(dfxy = discr$li, fac = as.factor(all_trait_pca$condi), col = gcol, xax =
 
 pairwise correlation
 ```{r}
-ggpairs(all_trait_pca[,c("height_veg_cm", "height_rep_cm","no_leaves","no_rep_stems","seeds_number.inf" ,"weight.seed", "no_flowers_tt")], diag = list("continuous"="blank"))
+ggpairs(all_trait_pca[,c("height_veg_cm", "height_rep_cm","nb_leaves","nb_rep_stems","seeds_number.inf" ,"weight.seed", "nb_flowers")], diag = list("continuous"="blank"))
 ```
 
 ```{r}

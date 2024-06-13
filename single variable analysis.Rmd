@@ -238,6 +238,16 @@ sjPlot::plot_model(glmm_vegh_sc, show.values = TRUE, width = 0.1, title = "inter
 sjPlot::tab_model(glmm_vegh_tc,show.intercept = T)
 sjPlot::plot_model(glmm_vegh_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on vegetative height") 
 ```
+```{r}
+print("temperature")
+summary(glmm_vegh3)
+print("competition")
+summary(glmm_vegh4)
+print("interaction")
+summary(glmm_vegh_tc)
+
+
+```
 
 
 ### post hoc analysis
@@ -295,7 +305,7 @@ newdat$height_veg_cm <- predict(glmm_vegh_tc,newdat,re.form=NA)
 mm <- model.matrix(terms(glmm_vegh_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_vegh_tc),mm))
-tvar1 <- pvar1+VarCorr(glmm_vegh_tc)$Subject[1]  ## must be adapted for more complex models
+#tvar1 <- pvar1+VarCorr(glmm_vegh_tc)$Subject[1]  ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
     newdat
@@ -324,7 +334,7 @@ g0_vegh2<-plot(pred_vegh2) + ggtitle(" ") +
   ylab("vegetative height (cm)")+
   theme(legend.position="none")
 
-g0_vegh2<-ggdraw(add_sub(g0_vegh2,"Competition:*** Site:NS Temperature:**",size=11,y=0.65))
+g0_vegh2<-ggdraw(add_sub(g0_vegh2,"Competition:*** Site:* Temperature:**",size=11,y=0.65))
 g0_vegh2
 
 ```
@@ -370,6 +380,16 @@ sjPlot::tab_model(glmm_reph_sc,show.intercept = T)
 plot_model(glmm_reph_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on reproductive height per infructescence") 
 sjPlot::tab_model(glmm_vegh_tc,show.intercept = T)
 plot_model(glmm_reph_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on reproductive height per infructescence") 
+```
+```{r}
+print("temperature")
+summary(glmm_reph3)
+print("competition")
+summary(glmm_reph4)
+print("interaction")
+summary(glmm_reph_tc)
+
+
 ```
 ### post hoc analysis
 ```{r}
@@ -422,7 +442,7 @@ newdat$height_rep_cm <- predict(glmm_reph_tc,newdat,re.form=NA)
 mm <- model.matrix(terms(glmm_reph_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_reph_tc),mm))
-tvar1 <- pvar1+VarCorr(glmm_reph_tc)$Subject[1]  ## must be adapted for more complex models
+#tvar1 <- pvar1+VarCorr(glmm_reph_tc)$Subject[1]  ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
     newdat
@@ -451,7 +471,7 @@ g0_reph2<-plot(pred_reph2) + ggtitle(" ") +
   xlab("competition") + 
   ylab("reproductive height (cm)")
 
-g0_reph2<-ggdraw(add_sub(g0_reph2,"Competition:*** Site:NS Temperature:**",size=11,y=0.65))
+g0_reph2<-ggdraw(add_sub(g0_reph2,"Competition:* Site:*** Temperature:**",size=11,y=0.65))
 g0_reph2
 
 ```
@@ -493,6 +513,16 @@ sjPlot::tab_model(glmm_nol_sc,show.intercept = T)
 plot_model(glmm_nol_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on number of leaves") 
 sjPlot::tab_model(glmm_nol_tc,show.intercept = T)
 plot_model(glmm_nol_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on number of leaves") 
+```
+```{r}
+print("temperature")
+summary(glmm_nol3)
+print("competition")
+summary(glmm_nol4)
+print("interaction")
+summary(glmm_nol_tc)
+
+
 ```
 ## post hoc analysis
 ```{r}
@@ -556,7 +586,7 @@ newdat$no_leaves <- predict(glmm_nol_tc,newdat,re.form=NA)
 mm <- model.matrix(terms(glmm_nol_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_nol_tc),mm))
-tvar1 <- pvar1+VarCorr(glmm_nol_tc)$Subject[1]  ## must be adapted for more complex models
+#tvar1 <- pvar1+VarCorr(glmm_nol_tc)$Subject[1]  ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
     newdat
@@ -589,7 +619,7 @@ g0_nol2<-plot(pred_nol2) + ggtitle(" ") +
   theme(legend.position="none")
 
 
-g0_nol2<-ggdraw(add_sub(g0_nol2,"Competition:*** Site:NS Temperature:**",size=11,y=0.65))
+g0_nol2<-ggdraw(add_sub(g0_nol2,"Competition:*** Site:*** Temperature:NS",size=11,y=0.65))
 g0_nol2
 
 ```
@@ -630,6 +660,16 @@ sjPlot::tab_model(glmm_nof_sc,show.intercept = T)
 plot_model(glmm_nof_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on number of flower") 
 sjPlot::tab_model(glmm_nof_tc,show.intercept = T)
 plot_model(glmm_nof_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on number of flower") 
+```
+```{r}
+print("temperature")
+summary(glmm_nof3)
+print("competition")
+summary(glmm_nof4)
+print("interaction")
+summary(glmm_nof_tc)
+
+
 ```
 ## post hoc analysis
 ```{r}
@@ -690,7 +730,7 @@ newdat$no_flowers_tt <- predict(glmm_nof_tc,newdat,re.form=NA)
 mm <- model.matrix(terms(glmm_nof_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_nof_tc),mm))
-tvar1 <- pvar1+VarCorr(glmm_nof_tc)$Subject[1]  ## must be adapted for more complex models
+#tvar1 <- pvar1+VarCorr(glmm_nof_tc)$Subject[1]  ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
     newdat
@@ -721,7 +761,7 @@ g0_nof2<-plot(pred_nof2) + ggtitle(" ") +
   ylab("number of inflorescence")+
   theme(legend.position="none")
 
-g0_nof2<-ggdraw(add_sub(g0_nof2,"Competition:*** Site:NS Temperature:**",size=11,y=0.65))
+g0_nof2<-ggdraw(add_sub(g0_nof2,"Competition:*** Site:*** Temperature:NS",size=11,y=0.65))
 g0_nof2
 
 ```
@@ -761,6 +801,16 @@ sjPlot::tab_model(glmm_ll_sc,show.intercept = T)
 plot_model(glmm_ll_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on leaf length") 
 sjPlot::tab_model(glmm_ll_tc,show.intercept = T)
 plot_model(glmm_ll_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on leaf lengthr") 
+```
+```{r}
+print("temperature")
+summary(glmm_ll3)
+print("competition")
+summary(glmm_ll4)
+print("interaction")
+summary(glmm_ll_tc)
+
+
 ```
 ## post hoc analysis
 ```{r}
@@ -815,7 +865,7 @@ newdat$leaf_length_mm <- predict(glmm_ll_tc,newdat,re.form=NA)
 mm <- model.matrix(terms(glmm_ll_tc),newdat)
 ## or newdat$distance <- mm %*% fixef(fm1)
 pvar1 <- diag(mm %*% tcrossprod(vcov(glmm_ll_tc),mm))
-tvar1 <- pvar1+VarCorr(glmm_ll_tc)$Subject[1]  ## must be adapted for more complex models
+#tvar1 <- pvar1+VarCorr(glmm_ll_tc)$Subject[1]  ## must be adapted for more complex models
 cmult <- 1.96 ## could use 1.96
 newdat <- data.frame(
     newdat
@@ -843,9 +893,10 @@ g0_ll2<-plot(pred_ll2) + ggtitle(" ") +
   theme(legend.position="none")+
   xlab("competition") + 
   ylab("leaf length (mm)")+
-  theme(legend.position="none")
+  theme(legend.position="none")+
+  theme(text = element_text(size = 25))
 
-g0_ll2<-ggdraw(add_sub(g0_ll2,"Competition:*** Site:* Temperature:* ",size=11,y=0.65))
+g0_ll2<-ggdraw(add_sub(g0_ll2,"Competition:*** Site:* Temperature:* ",size=25,y=0.65))
 g0_ll2
 
 ```
@@ -885,6 +936,16 @@ sjPlot::tab_model(glmm_lt_sc,show.intercept = T)
 plot_model(glmm_lt_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on leaf thickness") 
 sjPlot::tab_model(glmm_lt_tc,show.intercept = T)
 plot_model(glmm_lt_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition onleaf thickness") 
+```
+```{r}
+print("temperature")
+summary(glmm_lt3)
+print("competition")
+summary(glmm_lt4)
+print("interaction")
+summary(glmm_lt_tc)
+
+
 ```
 ## post hoc analysis
 ```{r}
@@ -1010,6 +1071,16 @@ plot_model(glmm_lw_sc, show.values = TRUE, width = 0.1, title = "interaction of 
 sjPlot::tab_model(glmm_lt_tc,show.intercept = T)
 plot_model(glmm_lw_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on leaf width") 
 ```
+```{r}
+print("temperature")
+summary(glmm_lw3)
+print("competition")
+summary(glmm_lw4)
+print("interaction")
+summary(glmm_lw_tc)
+
+
+```
 ## post hoc analysis
 ```{r}
 summary(glht(glmm_lw1, mcp(condi="Tukey")))
@@ -1132,6 +1203,16 @@ sjPlot::tab_model(glmm_nrs_sc,show.intercept = T)
 plot_model(glmm_nrs_sc, show.values = TRUE, width = 0.1, title = "interaction of site and competition on number of reproductiv stems") 
 sjPlot::tab_model(glmm_lt_tc,show.intercept = T)
 plot_model(glmm_lt_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on number of reproductiv stems") 
+```
+```{r}
+print("temperature")
+summary(glmm_nrs3)
+print("competition")
+summary(glmm_nrs4)
+print("interaction")
+summary(glmm_nrs_tc)
+
+
 ```
 ## post hoc analysis
 ```{r}
@@ -1260,6 +1341,16 @@ plot_model(glmm_dm_sc, show.values = TRUE, width = 0.1, title = "interaction of 
 sjPlot::tab_model(glmm_dm_tc,show.intercept = T)
 plot_model(glmm_dm_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on dry mass") 
 ```
+```{r}
+print("temperature")
+summary(glmm_dm3)
+print("competition")
+summary(glmm_dm4)
+print("interaction")
+summary(glmm_dm_tc)
+
+
+```
 ## post hoc analysis
 ```{r}
 summary(glht(glmm_dm1, mcp(condi="Tukey")))
@@ -1386,6 +1477,16 @@ plot_model(glmm_ldmc_sc, show.values = TRUE, width = 0.1, title = "interaction o
 sjPlot::tab_model(glmm_ldmc_tc,show.intercept = T)
 plot_model(glmm_ldmc_tc, show.values = TRUE, width = 0.1, title = "interactions of temperature and competition on LDMC") 
 ```
+```{r}
+print("temperature")
+summary(glmm_ldmc3)
+print("competition")
+summary(glmm_ldmc4)
+print("interaction")
+summary(glmm_ldmc_tc)
+
+
+```
 ## post hoc analysis
 ```{r}
 summary(glht(glmm_ldmc1, mcp(condi="Tukey")))
@@ -1499,15 +1600,17 @@ g0_ldmc2<-plot(pred_ldmc2) + ggtitle(" ") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) +
   theme(legend.position="none")+
   xlab("competition") + 
-  ylab("LDMC(mg/g)")
+  ylab("LDMC(mg/g)")+
+  theme(text = element_text(size = 25))
+  
 
-g0_ldmc2<-ggdraw(add_sub(g0_ldmc2,"Competition:*** Site:** Temperature:NS ",size=11,y=0.65))
+g0_ldmc2<-ggdraw(add_sub(g0_ldmc2,"Competition:*** Site:** Temperature:NS ",size=25,y=0.65))
 g0_ldmc2
 
 ```
 
 # glmm on seed weight
-```{r}
+
 all_trait_pca<-all_trait_pca %>% mutate(weight.seed.log2=log(weight.seed.log))
 
 
@@ -1515,7 +1618,29 @@ glmm_wps_tc<- lmer(weight.seed.log2~temperature*treat2.y + (1|blockID.y)+ (1|spe
 
 glmm_wps3<- lmer(weight.seed.log2~temperature + (1|blockID.y)+ (1|species), data=all_trait_pca)
 
+glmm_wps4<- lmer(weight.seed.log2~treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
 summary(glmm_wps3)
+```{r}
+glmm_wps1<- lmer(log(weight.seed.log)~condi + (1|blockID)+ (1|species), data=df)
+# log distribution : no need of generalized
+
+glmm_wps2<- lmer(log(weight.seed.log)~site + (1|blockID)+ (1|species), data=df)
+
+glmm_wps3<- lmer(log(weight.seed.log)~temperature + (1|blockID)+ (1|species), data=df)
+
+glmm_wps4<- lmer(log(weight.seed.log)~treat2 + (1|blockID)+ (1|species), data=df)
+glmm_wps_tc<- lmer(log(weight.seed.log)~temperature*treat2 + (1|blockID)+ (1|species), data=df)
+```
+
+```{r}
+print("temperature")
+summary(glmm_wps3)
+print("competition")
+summary(glmm_wps4)
+print("interaction")
+summary(glmm_wps_tc)
+
 
 ```
 #final graph with confidence interval
@@ -1550,8 +1675,41 @@ g0_wps<-ggdraw(add_sub(g0_wps, "   Competition:NS Site:** Temperature:NS"))
 g0_wps
 
 # glmm on seed number
+
+
+
+glmm_sn_tc<- glmer.nb(seeds_number.inf~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait)
+
+
+glmm_sn3<- glmer.nb(seeds_number.inf~temperature + (1|blockID.y)+ (1|species), data=all_trait)
+glmm_sn4<- glmer.nb(seeds_number.inf~treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+
+
 ```{r}
-glmm_sn_tc<- glmer.nb(seeds_number.inf~temperature*treat2.y + (1|blockID.y)+ (1|species), data=all_trait_pca)
+glmm_sn1<- glmer.nb(seeds_number.inf~condi + (1|blockID)+ (1|species), data=df_percentage)
+#gllm_test<-glmer.nb(seeds_number.inf~condi + (1|blockID)+ (1|species), data=df)
+
+glmm_sn2<- glmer.nb(seeds_number.inf~site + (1|blockID)+ (1|species), data=df)
+
+glmm_sn3<- glmer.nb(seeds_number.inf~temp +  (1|blockID)+ (1|species), data=df)
+
+
+glmm_sn4<- glmer.nb(seeds_number.inf~treat2 +  (1|blockID)+ (1|species), data=df)
+glmm_sn_tc<- glmer.nb(seeds_number.inf~temp*treat2 + (1|blockID)+ (1|species), data=df)
+```
+
+
+
+
+
+```{r}
+print("temperature")
+summary(glmm_sn3)
+print("competition")
+summary(glmm_sn4)
+print("interaction")
+summary(glmm_sn_tc)
+
 
 ```
 
@@ -1604,7 +1762,7 @@ combined + plot_layout(guides = "collect")
 
 
 ```{r}
-pred_sn2<-ggpredict(glmm_sn_tc,terms=c("treat2.y", "temperature"))
+pred_sn2<-ggpredict(glmm_sn_tc,terms=c("treat2", "temp"))
 g0_sn2<-plot(pred_sn2,show.legend=FALSE) + ggtitle(" ") +
   geom_line(position = position_dodge(width = 0.25)) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) +
@@ -1623,16 +1781,17 @@ glmm_wps1<- lmer(log(weight.seed.log)~condi + (1|blockID)+ (1|species), data=df)
 ```
 
 ```{r}
-pred_wps2<-ggpredict(glmm_wps_tc,terms=c("treat2.y", "temperature"))
+pred_wps2<-ggpredict(glmm_wps_tc,terms=c("treat2", "temperature"))
 g0_wps2<-plot(pred_wps2) + ggtitle(" ") +
   geom_line(position = position_dodge(width = 0.25)) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = 0.25), linewidth = 0.75, size = 1) +
   theme(legend.position="none")+
+  theme(text = element_text(size = 25))+
 
   xlab("competition") + 
-  ylab("log(weight per seed)")
+  ylab("weight per seed")
 
-g0_wps2<-ggdraw(add_sub(g0_wps2,"Competition:NS Site:** Temperature:NS ",size=11,y=0.65))
+g0_wps2<-ggdraw(add_sub(g0_wps2,"Competition:NS Site:*** Temperature:NS ",size=25,y=0.65))
 g0_wps2
 ```
 
@@ -1661,7 +1820,7 @@ g0_total1
 
 
 ```{r}
-g0_total2<-ggarrange(g0_lw2, g0_ll2, g0_dm2, g0_vegh2, g0_reph2, legend, ncol=3, nrow=2)
+g0_total2<-ggarrange(g0_nof2,g0_nol2, g0_nrs2, g0_ldmc2, g0_lt2,g0_lw2, g0_ll2, g0_dm2, g0_vegh2, g0_reph2, legend, ncol=4, nrow=3)
 g0_total2
 ```
 
@@ -1739,6 +1898,38 @@ calculer les inverses
 effect_inverse<-data.frame(traits=traits,competition=1/effect_variables$competition,site=1/effect_variables$site,temperature=1/effect_variables$temperature)
 effect_inverse
 ```
+# ratio effect of competition effect of site
+```{r}
+traits_site=c("ll","dm","nrs","ldmc","lt","gp","wps")
+traits_temp=c("lw","ll","vegh","reph","nof","nol")
+
+change_intensity_comp=c(rep(0,13))
+change_intensity_site=c(rep(0,13))
+change_intensity_temp=c(rep(0,13))
+
+for (i in 1:13){
+  change_intensity_comp[i]<-max(effect_variables$competition[i],1/effect_variables$competition[i])
+  change_intensity_site[i]<-max(effect_variables$site[i],1/effect_variables$site[i])
+  change_intensity_temp[i]<-max(effect_variables$temperature[i],1/effect_variables$temperature[i])
+}
+change_intensity=data.frame(traits=traits,comp_site=change_intensity_comp/change_intensity_site,comp_temp=change_intensity_comp/change_intensity_temp,site_temp=change_intensity_site/change_intensity_temp)
+
+change_intensity
+
+```
+
+
+```{r}
+#! if we 
+change_intensity_site_significant<-change_intensity[which(traits %in% traits_site),]
+mean(change_intensity_site_significant$comp_site)
+
+change_intensity_temp_significant<-change_intensity[which(traits %in% traits_temp),]
+mean(change_intensity_temp_significant$comp_temp)
+#t.test(change_intensity_temp,change_intensity_comp)
+
+```
+
 
 ```{r}
 a<-data.frame(condi=paste(pred_nol2$group,pred_nol2$x),trait_value=pred_nol2$predicted)
