@@ -1893,7 +1893,7 @@ wps_effect<-c()
   wps_effect<-HS/LS
 1/wps_effect
 ```
-calculer les inverses
+calculating inverse ( to only have value above 1)
 ```{r}
 effect_inverse<-data.frame(traits=traits,competition=1/effect_variables$competition,site=1/effect_variables$site,temperature=1/effect_variables$temperature)
 effect_inverse
@@ -1920,7 +1920,7 @@ change_intensity
 
 
 ```{r}
-#! if we 
+
 change_intensity_site_significant<-change_intensity[which(traits %in% traits_site),]
 mean(change_intensity_site_significant$comp_site)
 
